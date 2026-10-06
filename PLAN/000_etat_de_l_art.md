@@ -8,7 +8,8 @@
   10 questions : planification de la recherche, RAG agentique, temps et versions, structure
   navigable, graphes, découpage, petits modèles agents, citations, contraintes des modèles
   locaux, embeddings.
-- 26 publications retenues. **J'ai lu leurs résumés, pas les articles complets.** Les chiffres
+- 32 publications retenues, plus 9 références fournies par l'utilisateur et vérifiées (§12).
+  **J'ai lu leurs résumés, pas les articles complets.** Les chiffres
   cités viennent des résumés ; la plupart sont des prépublications non relues par des pairs,
   évaluées sur leurs propres jeux de test. Ce sont des indications fortes, pas des garanties :
   nos propres mesures (S12) trancheront.
@@ -224,6 +225,79 @@ tokens. Un budget de contexte fixé par modèle.
   [arXiv:2601.04720](https://arxiv.org/abs/2601.04720) ·
   [arXiv:2607.22042](https://arxiv.org/abs/2607.22042)
 
+## 11. Hiérarchiser selon l'angle de l'utilisateur, sans complaisance
+
+- **CoRM-RAG** (mai 2026) : quand la question contient une thèse ou une prémisse biaisée,
+  chercher par simple similarité ramène les documents qui la confirment et renforce les
+  erreurs. Les auteurs proposent de noter les documents sur la **force de la preuve** plutôt que
+  sur la ressemblance.
+  [arXiv:2605.01302](https://arxiv.org/abs/2605.01302)
+- **Opinion-Aware RAG** (avr.–oct. 2026) : un RAG doit représenter la diversité des positions,
+  pas une réponse unique ; les évaluateurs humains préfèrent ces réponses dans 79,2 % des cas.
+  [arXiv:2604.12138](https://arxiv.org/abs/2604.12138)
+- **Personalize Before Retrieve** (oct. 2025, AAAI 2026) : adapter l'élargissement de la
+  requête au profil de l'utilisateur donne jusqu'à +10 %.
+  [arXiv:2510.08935](https://arxiv.org/abs/2510.08935)
+- **Quand décomposer ?** (juin 2026, EMNLP 2026) : découper la requête **dès la première
+  recherche** dilue son sens ; découper **au moment du re-classement** améliore la vérification
+  fine des conditions.
+  [arXiv:2606.08577](https://arxiv.org/abs/2606.08577)
+- **Évaluation automatique de la reproductibilité en sciences comportementales** (juin 2026) :
+  un LLM retrouve les conclusions d'une étude dans 80 % des cas, mais la taille de l'effet dans
+  seulement 24 %. C'est un outil de **tri**, pas un juge de fiabilité.
+  [arXiv:2606.13670](https://arxiv.org/abs/2606.13670)
+- **Dominance des connaissances internes** (avr. 2026) : face à une contradiction, une API
+  commerciale testée passe outre les preuves fournies dans près de la moitié des cas ; les
+  petits modèles s'y tiennent mieux.
+  [arXiv:2606.23695](https://arxiv.org/abs/2606.23695)
+
+**Pour nous.** Deux réglages séparés :
+- la **priorité** (l'angle, par exemple « neurosciences d'abord ») est fixée par l'utilisateur ;
+- la **solidité** (niveau de preuve, statut de réplication) est fixée par les preuves.
+
+Le plan contient toujours une sous-question « contre-point », que l'utilisateur peut désactiver.
+Le statut de réplication vient de sources explicites (méta-analyses, projets de réplication),
+pas de l'avis du modèle.
+
+## 12. Références apportées par l'utilisateur (vérifiées le 2026-10-06)
+
+Chaque référence a été vérifiée sur arXiv. Toutes existent, mais 4 ont plus d'un an et
+plusieurs mentions de la bibliographie d'origine étaient inexactes :
+
+| Référence | Date | < 1 an | Vérification |
+|---|---|---|---|
+| Query Decomposition for RAG: Balancing Exploration-Exploitation (Petcu et al.) [arXiv:2510.18633](https://arxiv.org/abs/2510.18633) | oct. 2025 | oui | Confirmé : +35 % de précision par document, +15 % α-nDCG |
+| HERA, Experience as a Compass [arXiv:2604.00901](https://arxiv.org/abs/2604.00901) | avr. 2026 | oui | Confirmé : +38,69 % en moyenne sur 6 jeux de test |
+| CausalRAG2 (aussi intitulé HugRAG) [arXiv:2602.05143](https://arxiv.org/abs/2602.05143) | févr. 2026, ICML 2026 | oui | Existe. **L'apport annoncé (« préséance des lois cognition/biologie sur les variables tactiques ») ne figure pas dans l'article.** Apport réel : graphe causal hiérarchique avec « portes causales » qui écartent les corrélations trompeuses ; F1 36,45 % contre 26,87 % pour un RAG standard sur HolisQA-Biology |
+| ConflictRAG [arXiv:2605.17301](https://arxiv.org/abs/2605.17301) | mai 2026, IEEE SMC 2026 | oui | Confirmé (Entropy-TOPSIS). Il manque un auteur (Yueyuan Li) dans la liste d'origine |
+| Ψ-RAG [arXiv:2605.00529](https://arxiv.org/abs/2605.00529) | mai 2026, ICML 2026 | oui | Confirmé (déjà en §4) |
+| MA-RAG [arXiv:2505.20096](https://arxiv.org/abs/2505.20096) | mai 2025 | **non** | Existe ; arXiv seulement |
+| CausalRAG [arXiv:2503.19878](https://arxiv.org/abs/2503.19878) | mars 2025, ACL 2025 Findings | **non** | **Auteurs erronés** dans la bibliographie : il s'agit de Nengbo Wang, Xiaotian Han, Jagdip Singh, Jing Ma et Vipin Chaudhary |
+| MADAM-RAG [arXiv:2504.13079](https://arxiv.org/abs/2504.13079) | avr. 2025, COLM 2025 | **non** | Premier auteur : **Han** Wang (et non Hao) |
+| HiRAG [arXiv:2503.10150](https://arxiv.org/abs/2503.10150) | mars 2025, EMNLP 2025 Findings | **non** | Confirmé |
+
+**Ce que ces travaux apportent en plus :**
+
+- **Relations causales dans le graphe** (CausalRAG2). On distingue « A cause / favorise / inhibe /
+  médie B » de « A est associé à B ». La chaîne **mécanisme biologique → effet comportemental →
+  tactique** devient explicite, avec un niveau de preuve sur chaque maillon. C'est ce qui permet
+  de suivre sérieusement un angle « neurosciences d'abord ».
+- **Crédibilité multicritère pilotée par les données** (ConflictRAG) :
+  - Entropy-TOPSIS fait 7,1 % mieux que des pondérations réglées à la main. Nos poids de la
+    vérification documentaire (`002_strategie.md` §5.3) pourront être calibrés ainsi ;
+  - la détection en deux temps (un classifieur léger, puis le LLM seulement si nécessaire)
+    réduit le coût de 62 % pour 90,8 % de détection : c'est bien adapté au calcul local.
+- **Allouer l'effort entre sous-questions** (Petcu et al.) : le planificateur n'explore pas
+  toutes les sous-questions de la même façon. Il insiste sur celles qui rapportent des documents
+  pertinents et abandonne les stériles.
+- **Apprendre de l'expérience** (HERA) : la forme des plans et les prompts s'améliorent à partir
+  des réussites passées. C'est une piste pour une v2, complémentaire de l'entraînement de MiMo
+  (§7).
+- **Séparation des rôles** (MA-RAG, plus ancien) : planificateur, définition des étapes,
+  extracteur, rédacteur. Cela confirme notre découpage : MiMo planifie et extrait, Qwen3.8 rédige.
+- **Débat entre agents** (MADAM-RAG, plus ancien) : efficace sur les preuves contradictoires,
+  mais coûteux en local. On en garde une version légère : le second avis.
+
 ---
 
 ## Ce que cela change pour notre projet
@@ -239,6 +313,10 @@ tokens. Un budget de contexte fixé par modèle.
 | G | **MiMo agent de recherche** : piste confirmée, avec un entraînement par récompenses vérifiables tirées de notre RAG ; comparaison avec Tongyi DeepResearch | §7 |
 | H | **Contexte compact** : peu d'outils, schémas compacts, réponses plafonnées, budget par modèle | §9 |
 | I | **Collecte guidée par les questions** (proposition) : les lacunes révélées par un plan de recherche déclenchent une collecte ciblée en tâche de fond | déduit de §1 et §3 |
+| J | **Priorité ≠ solidité** : l'angle est fixé par l'utilisateur (question, option `--focus`, profil durable, validation du plan) ; la solidité est fixée par les preuves ; contre-point systématique | §11 |
+| K | **Relations causales et chaînes « mécanisme → comportement → action »**, avec un niveau de preuve par maillon | §12 |
+| L | **Crédibilité multicritère calibrée sur données** (pondération entropique) et détection des conflits en deux temps (léger, puis LLM) | §12 |
+| M | **Effort réparti entre sous-questions** selon ce qu'elles rapportent (exploration / exploitation) | §12 |
 
 ### Votre exemple, revu à la lumière de la recherche
 
