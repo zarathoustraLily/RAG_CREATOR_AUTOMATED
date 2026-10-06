@@ -8,11 +8,12 @@
   10 questions : planification de la recherche, RAG agentique, temps et versions, structure
   navigable, graphes, découpage, petits modèles agents, citations, contraintes des modèles
   locaux, embeddings.
-- 32 publications retenues, plus 9 références fournies par l'utilisateur et vérifiées (§12).
+- 37 publications retenues (dont 5 sur l'OCR, §13), plus 9 références fournies par
+  l'utilisateur et vérifiées (§12).
   **J'ai lu leurs résumés, pas les articles complets.** Les chiffres
   cités viennent des résumés ; la plupart sont des prépublications non relues par des pairs,
   évaluées sur leurs propres jeux de test. Ce sont des indications fortes, pas des garanties :
-  nos propres mesures (S12) trancheront.
+  nos propres mesures (S15) trancheront.
 - Les travaux plus anciens (RAPTOR, HippoRAG 2, Search-R1, Contextual Retrieval, bge-m3,
   Qwen3-Embedding…) n'apparaissent que comme points de comparaison.
 
@@ -220,7 +221,7 @@ tokens. Un budget de contexte fixé par modèle.
   [arXiv:2603.03300](https://arxiv.org/abs/2603.03300)
 - **Embeddings et re-classement** : plusieurs modèles multilingues récents sont à comparer à
   bge-m3 et bge-reranker-v2-m3 (Granite Embedding Multilingual R2, Qwen3-VL-Embedding et
-  Reranker, LAMAR). Je ne les ai pas étudiés en détail : à mesurer en S12.
+  Reranker, LAMAR). Je ne les ai pas étudiés en détail : à mesurer en S15.
   [arXiv:2605.13521](https://arxiv.org/abs/2605.13521) ·
   [arXiv:2601.04720](https://arxiv.org/abs/2601.04720) ·
   [arXiv:2607.22042](https://arxiv.org/abs/2607.22042)
@@ -298,6 +299,52 @@ plusieurs mentions de la bibliographie d'origine étaient inexactes :
 - **Débat entre agents** (MADAM-RAG, plus ancien) : efficace sur les preuves contradictoires,
   mais coûteux en local. On en garde une version légère : le second avis.
 
+## 13. Lire les PDF scannés et les images (OCR)
+
+- **Classement des modèles OCR libres** (août 2026, synthèse de bancs d'essai publics) :
+  - sur OmniDocBench v1.6, les trois premiers sont de **petits modèles spécialisés de 0,9 à
+    1,2 milliard de paramètres** : PaddleOCR-VL-1.6 (96,34 %), MinerU2.5-Pro (95,75 %) et
+    GLM-OCR (95,22 %). Ils devancent un modèle généraliste de 235 milliards (Qwen3-VL-235B,
+    89,78 %) ;
+  - sur olmOCR-Bench, en tête : Chandra OCR 2 (85,8 %) et dots.mocr (83,9 %).
+
+  Ce sont des chiffres d'un article de blog, à confirmer en S15.
+  [roboflow.com](https://roboflow.com/blog/best-open-source-ocr-models)
+- **llama.cpp prend en charge ces modèles OCR** (avr. 2026) : LightOnOCR, Qianfan-OCR,
+  PaddleOCR-VL, GLM-OCR, DeepSeek-OCR, Dots.OCR, HunyuanOCR. On les sert avec `llama-server`
+  (modèle + `--mmproj`) et on leur envoie les images au format OpenAI. Recommandations :
+  température basse (0,1) et images de bonne qualité pour limiter les inventions.
+  [Hugging Face — Using OCR models with llama.cpp](https://huggingface.co/blog/ggml-org/using-ocr-models-with-llama-cpp)
+- **Do VLMs Read or Rewrite?** (mai 2026) : les modèles de vision **généralistes** ont tendance à
+  **réécrire** un texte imparfait en une forme plus plausible au lieu de le transcrire. Ils
+  perdent jusqu'à 6,9 points sous perturbation, contre 0,1 à 3,4 pour les modèles OCR
+  spécialisés et moins de 0,8 pour l'OCR classique. Les mots courts (4 à 6 caractères) sont
+  réécrits environ 10 % du temps.
+  [arXiv:2607.21617](https://arxiv.org/abs/2607.21617)
+- **Reading or Guessing?** (mai–sept. 2026) : les erreurs des modèles de vision restent
+  **fluides** (texte plausible mais absent de la page) ; il ne faut pas confondre fluidité et
+  fidélité.
+  [arXiv:2605.27750](https://arxiv.org/abs/2605.27750)
+- **When Good OCR Is Not Enough** (avr. 2026) : une bonne précision caractère par caractère ne
+  garantit pas un bon RAG. Les erreurs de structure (ordre de lecture, tableaux) font échouer la
+  recherche. **Il faut évaluer l'OCR par ses effets sur la recherche.**
+  [arXiv:2605.00911](https://arxiv.org/abs/2605.00911)
+- **Conversion PDF → Markdown de documents français** (févr. 2026) : sur 15 modèles, les modèles
+  ouverts sont **compétitifs sur les mises en page imprimées classiques** ; les formulaires et
+  l'écriture manuscrite restent difficiles.
+  [arXiv:2602.11960](https://arxiv.org/abs/2602.11960)
+
+**Pour nous.**
+1. **Texte natif d'abord.** Si le PDF a une couche texte de bonne qualité, on l'utilise : c'est
+   exact et instantané.
+2. **OCR spécialisé ensuite**, pour les pages scannées : un petit modèle (PaddleOCR-VL ou
+   GLM-OCR) servi par `llama-server`, à température basse.
+3. **MiMo en vision pour comprendre**, pas pour transcrire : décrire les figures, schémas et
+   tableaux-images pour qu'ils deviennent cherchables, et **arbitrer** les passages douteux.
+4. **Vérification de l'OCR** : contrôles automatiques (mots inconnus, répétitions, ordre de
+   lecture), comparaison de deux moteurs sur un échantillon de pages, et mesure de l'effet sur la
+   recherche.
+
 ---
 
 ## Ce que cela change pour notre projet
@@ -317,6 +364,7 @@ plusieurs mentions de la bibliographie d'origine étaient inexactes :
 | K | **Relations causales et chaînes « mécanisme → comportement → action »**, avec un niveau de preuve par maillon | §12 |
 | L | **Crédibilité multicritère calibrée sur données** (pondération entropique) et détection des conflits en deux temps (léger, puis LLM) | §12 |
 | M | **Effort réparti entre sous-questions** selon ce qu'elles rapportent (exploration / exploitation) | §12 |
+| N | **Lecture de tout document** : texte natif d'abord, OCR spécialisé pour les scans (livres), MiMo en vision pour les figures et l'arbitrage, OCR vérifié et évalué par ses effets sur la recherche | §13 |
 
 ### Votre exemple, revu à la lumière de la recherche
 

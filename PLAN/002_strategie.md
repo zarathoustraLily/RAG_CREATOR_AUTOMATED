@@ -1,33 +1,34 @@
 # 002 — Stratégie de réalisation
 
-> Statut : **proposition à valider** · v0.1 · 2026-10-06
-> Prérequis : `001_but.md` (le *quoi*). Ce document décrit le *comment*.
-> Le découpage en sessions de développement est dans `003_prompts_sessions/`.
+> Statut : **proposition** · v0.3 · 2026-10-06
+> Prérequis : `001_but.md` (le quoi) et `000_etat_de_l_art.md` (ce que dit la recherche,
+> cité ci-dessous sous la forme « EdA §n »). Le découpage en sessions est dans
+> `003_prompts_sessions/`.
 
 ---
 
 ## 0. Résumé
 
-1. **Le LLM transforme, le code décide.** MiMo 9B rédige, classe, vérifie et extrait ; tout le
-   reste (recherche, dédoublonnage, seuils, indexation, citations) est fait par du code
-   déterministe et testable.
-2. **Tout est une machine à états persistée dans SQLite.** Chaque document et chaque thème
-   avancent d'étape en étape ; un arrêt brutal ne perd rien, rien n'est traité deux fois.
-3. **Sorties structurées garanties.** Chaque appel au modèle renvoie du JSON contraint par un
-   schéma (grammaire `llama-server`), validé par Pydantic, réparé si besoin.
-4. **Réflexion (`<think>`) seulement là où elle paie** : charte, vérification, croisement,
-   synthèses. Désactivée pour l'extraction de masse (×3 à ×5 plus rapide).
-5. **Prompts = fichiers versionnés**, surchargeables par thème, journalisés à chaque appel.
-6. **Deux familles de modèles** : MiMo 9B construit, Qwen3.8-27B / Flash-Next consomment
-   (et peuvent prêter main-forte aux étapes difficiles quand ils sont chargés).
-7. **Le RAG est optimisé pour le consommateur** : extraits autoportants, recherche hybride +
-   re-classement, routage multithématique, fiches pré-calculées, contexte compact annoté,
-   outils MCP.
-8. **On mesure dès le début** : jeu de référence pour la vérification, jeu d'évaluation pour la
-   recherche et les réponses, débit d'ingestion.
-9. **MiMo peut devenir l'agent de recherche** dans le RAG : Qwen3.8 lui délègue la recherche
-   multi-étapes et reçoit un dossier de preuves compact. D'abord guidé par prompt ; **spécialisé
-   par entraînement (LoRA) seulement si les mesures le justifient** (§6.4, session S13).
+1. **Deux moments, un seul système** : *construire* une base vérifiée, datée et reliée (en
+   tâche de fond) ; *répondre* avec un agent qui planifie, cherche, contrôle et hiérarchise.
+2. **L'agent planifie, le moteur exécute** : le modèle comprend la situation et bâtit le plan ;
+   un moteur classique (recherche hybride + re-classement) trouve et trie les preuves. Cet
+   hybride est plus juste et ~3× moins coûteux qu'un agent qui fait tout (EdA §2).
+3. **Quatre couches de connaissance** : carte des thèmes, étiquettes, graphe typé, horloge.
+4. **Profils de domaine** : chaque domaine a ses étiquettes, ses sources de référence, son
+   échelle de solidité, son unité de découpage et son rythme d'actualisation.
+5. **Le temps est une contrainte dure** : versions conservées, périodes de validité, date de
+   référence de la question, veille d'actualisation (EdA §3).
+6. **Priorité ≠ solidité** : l'angle vient de l'utilisateur, la solidité vient des preuves ;
+   contre-point systématique (EdA §11).
+7. **Tout est vérifié et tracé** : JSON contraint, citations contrôlées, chaque décision
+   journalisée ; état persistant et reprise après coupure.
+8. **MiMo construit et cherche ; Qwen3.8 rédige.** MiMo pourra être spécialisé par
+   entraînement sur des récompenses vérifiables tirées de la base elle-même (EdA §7).
+9. **Tout document est lu** : texte natif d'abord ; **OCR spécialisé** pour les PDF scannés et
+   les livres ; **MiMo en vision** pour décrire figures et schémas et arbitrer les passages
+   douteux ; OCR vérifié et jugé sur ses effets sur la recherche (EdA §13).
+10. **On mesure** : cinq cas de référence (`001_but.md` §7) servent de tests d'acceptation.
 
 ---
 
@@ -35,482 +36,545 @@
 
 | Principe | Conséquence concrète |
 |---|---|
-| Le LLM est un *transformateur sémantique*, pas un orchestrateur | Les décisions finales (accepter, rejeter, fusionner) combinent scores LLM + règles codées et réglables |
-| Idempotence et reprise | Chaque étape lit un état, écrit un état ; un *bail* (lease) avec expiration protège les tâches en cours |
-| Contenu web = **donnée non fiable** | Toujours placé entre balises `<document>…</document>` ; consigne d'ignorer toute instruction qu'il contient ; détection de motifs d'injection |
-| Traçabilité totale | Chaque extrait garde URL/fichier, position, date de collecte ; chaque appel LLM est journalisé (prompt@version, modèle, durée, tokens, résultat) |
-| Agnostique au modèle | Profils de modèles + affectation par étape dans `config.yaml` ; aucun nom de modèle codé en dur |
-| Sobriété | Dépendances minimales ; extras optionnels (`[web]`, `[pdf]`, `[graph]`, `[mcp]`, `[api]`) |
-| Mesurer avant d'optimiser | Les réglages par défaut (taille d'extrait, k, seuils) sont fixés en S12 sur des mesures, pas à l'intuition |
+| Le LLM transforme et juge, le code décide et exécute | Décisions finales = scores LLM + règles codées et réglables ; recherches exécutées par le moteur |
+| Planifier avant de chercher, et soigner le premier coup | Plan explicite et contrôlable ; recherches parallèles initiales, puis approfondissement ciblé (EdA §1) |
+| Décomposer au bon moment | Question entière pour la recherche initiale, sous-questions pour le re-classement et le contrôle (EdA §11) |
+| Le temps est une contrainte, pas un bonus | Filtre dur « en vigueur à la date de référence » quand le profil l'exige (EdA §3) |
+| La solidité ne se négocie pas | Échelles de preuve par profil ; statut de réplication tiré de sources explicites, pas de l'avis du modèle |
+| Contenu collecté = donnée non fiable | Toujours entre `<document>…</document>`, consigne d'ignorer ses instructions, détection d'injection |
+| Citer, c'est vérifier | Fidélité de chaque citation contrôlée ; nombre d'étapes de recherche plafonné (EdA §8) |
+| Contexte compact | Peu d'outils, schémas compacts, réponses plafonnées, budget par modèle (EdA §9) |
+| Idempotence et reprise | Machines à états dans SQLite, baux avec expiration |
+| Agnostique au modèle | Profils de modèles + affectation par étape avec repli |
+| Mesurer avant d'optimiser | Réglages fixés sur mesures (S15) ; journal de toutes les décisions |
 
 ---
 
 ## 2. Architecture d'ensemble
 
 ```
-                         ┌──────────────────────── ragc (CLI) ────────────────────────┐
-                         │ theme add/tree · ingest · review · search · ask · report   │
-                         └──────────────┬───────────────────────────────┬─────────────┘
-                                        │ écrit commandes / lit l'état  │
-                                        ▼                               ▼
-┌──────────────┐   ┌──────────────────────────────────────────┐   ┌──────────────────────┐
-│ Sources      │   │ DÉMON (asyncio, priorité basse)           │   │ SQLite (WAL)          │
-│ SearxNG      │──▶│  ordonnanceur à états, par thème          │◀─▶│ thèmes · chartes      │
-│ Wikipédia    │   │  E0 charte → E1 découverte → E2 récup.    │   │ documents · extraits  │
-│ Europe PMC   │   │  → E3 pré-contrôles → E4 vérif. doc       │   │ FTS5 (BM25) · vecteurs│
-│ URL · RSS    │   │  → E5 découpage → E6 vérif. extraits      │   │ entités · relations   │
-│ inbox/ local │   │  → E7 enrichissement → E8 indexation      │   │ affirmations · fiches │
-└──────────────┘   │  → E9 graphe → E10 croisement             │   │ tâches · cycles       │
-                   │  → E11 synthèses → E12 couverture ↺       │   │ journal des appels LLM│
-                   └───────┬───────────────┬───────────────┬───┘   └──────────┬───────────┘
-                           │ JSON contraint│ vecteurs      │ scores            │
-                           ▼               ▼               ▼                   │
-                 llama-server :8080  llama-server :8081  llama-server :8082    │
-                 MiMo 9B (constructeur) bge-m3 (embeddings) bge-reranker-v2-m3 │
-                                                                               │
-          ┌──────────────── Consommation multithématique ─────────────────────┘
-          ▼
-   routage thèmes → recherche hybride → re-classement → fiches → contexte compact annoté
-          │
-          ├── outils MCP / fonctions ──▶ Qwen3.8-27B · Qwen3.8-Flash-Next (RAG agentique)
-          ├── rag_research ──▶ agent de recherche MiMo (sous-agent) ──▶ dossier de preuves ──▶ Qwen3.8
-          ├── proxy /v1/chat/completions ──▶ Open WebUI, LM Studio
-          └── ragc ask · API HTTP · exports JSONL / GraphML / Markdown
+                              CONSTRUIRE (tâche de fond)
+┌────────────┐   ┌──────────────────────────────────────────────────────────────┐
+│ Connecteurs│   │ E0 charte+profil → E1 découverte → E2 récupération + lecture │
+│ par profil │──▶│ → E3 pré-contrôles → E4 vérification doc → E5 datation        │
+│ SearxNG    │   │ → E6 découpage → E7 vérification+étiquetage des extraits      │
+│ Wikipédia  │   │ → E8 enrichissement → E9 indexation → E10 graphe typé         │
+│ Europe PMC │   │ → E11 croisement/conflits → E12 fiches → E13 couverture ↺     │
+│ OpenAlex   │   │ E14 veille d'actualisation (planifiée)                        │
+│ Légifrance…│   └───────────────▲──────────────────────────────┬───────────────┘
+│ inbox/ URL │                   │ collectes ciblées (lacunes)  │
+└────────────┘                   │                              ▼
+                     ┌───────────┴───────────┐     ┌──────────────────────────────┐
+                     │ RÉPONDRE (agent)       │     │ SQLite (WAL)                 │
+ question ──────────▶│ R1 situation           │◀───▶│ thèmes·profils·chartes·cartes│
+ + angle / profil    │ R2 angle               │     │ documents·versions·validité  │
+                     │ R3 plan (sous-questions│     │ extraits·étiquettes·FTS5·vect│
+                     │    typées, poids,      │     │ entités·relations typées     │
+                     │    contre-point)       │     │ affirmations·conflits·fiches │
+                     │ R4 premier coup        │     │ exécutions de l'agent·lacunes│
+                     │ R5 approfondissement   │     │ journal des appels LLM       │
+                     │ R6 contrôles           │     └──────────────────────────────┘
+                     │ R7 hiérarchisation     │
+                     │ R8 dossier + lacunes   │──▶ Qwen3.8 rédige (proxy, MCP, ragc ask)
+                     └────────────────────────┘
+   llama-server : :8080 MiMo 9B (constructeur + agent + vision) · :8081 embeddings · :8082 re-classement
+                  :8083 OCR spécialisé (PaddleOCR-VL ou GLM-OCR)
+                  :8090 Qwen3.8 (consommateur ; renfort optionnel de construction)
 ```
 
 ---
 
-## 3. Pile technique et choix argumentés
+## 3. Le modèle de connaissance
 
-### 3.1 Inférence locale
+### 3.1 Arbre des thèmes → carte navigable
 
-Trois instances `llama-server` (versions récentes de llama.cpp, nécessaires pour l'architecture
-Qwen3.5 hybride de MiMo) :
+- Un thème s'écrit `Droit > Fiscalité > Géorgie` ou `droit/fiscalite/georgie` ; nœuds
+  intermédiaires créés au besoin ; alias (« amanite tue-mouches », « fly agaric »).
+- Chaque nœud a une **charte** (`charte.yaml`, modifiable à la main) : définition, périmètre
+  inclus / exclu, sous-thèmes, mots-clés FR/EN, synonymes, confusions à éviter, sources
+  prioritaires, affirmations sensibles, **profil de domaine**, langues.
+- Chaque nœud a une **fiche de nœud** (C12) : ce que contient ce rayon, ses sous-thèmes,
+  points clés, chiffres de couverture, lacunes connues. L'ensemble des fiches forme la
+  **carte** que l'agent lit pour choisir où chercher (EdA §4) — c'est elle qui permet de
+  relier « vendre une voiture » à *négociation*, *économie comportementale* et *neurosciences*
+  sans dépendre des mots de la question.
+- Interroger un nœud = interroger son sous-arbre ; un document a un nœud principal (le plus
+  précis) et des nœuds secondaires, sans duplication.
+
+### 3.2 Profils de domaine
+
+Fichiers `profils/<nom>.yaml`, choisis par la charte (C01), surchargeables par thème. Profils
+livrés en v1 : `juridique_fiscal`, `pharmaco_medical`, `mycologie`,
+`sciences_comportementales` (neurosciences, psychologie, économie comportementale, vente),
+`generique`.
+
+Chaque profil définit :
+
+| Élément | `juridique_fiscal` | `sciences_comportementales` |
+|---|---|---|
+| Étiquettes spécifiques | juridiction, nature de norme, référence d'article, date d'effet, statut (en vigueur / modifié / abrogé) | type d'étude, population (étudiants, professionnels…), taille d'échantillon, taille d'effet, préenregistrement, **statut de réplication** |
+| Échelle de solidité (forte → faible) | texte officiel en vigueur > cour suprême > autres juridictions > doctrine administrative > doctrine universitaire > article de cabinet > blog/forum | méta-analyse corrigée du biais de publication / réplication multi-laboratoires > expérience de terrain préenregistrée > expérience de laboratoire > étude corrélationnelle > ouvrage de vulgarisation > blog |
+| Unité de découpage | **l'article** (avec son code, son numéro, sa version) ; la décision par motifs | la section d'article scientifique (résumé, méthode, résultats, discussion) |
+| Relations privilégiées | modifie, abroge, applique, interprète, cite, déroge à | cause, favorise, inhibe, médie, modère, réplique, échoue à répliquer |
+| Actualisation | codes : mensuelle ; barèmes : à chaque loi de finances ; jurisprudence : nouvelles décisions | nouvelles publications : trimestrielle ; rétractations : mensuelle |
+| Filtre temporel | **dur** (version en vigueur à la date de référence) | souple (récence comme bonus, sauf rétractation) |
+| Sources de référence | Légifrance, Judilibre, BOFiP, EUR-Lex, matsne.gov.ge… | Europe PMC, OpenAlex, Crossref (dont les rétractations), bases de réplication |
+
+`pharmaco_medical` : méta-analyse > essai randomisé > observationnel > série de cas > animal /
+in vitro > avis d'expert, plus les avis d'agences sanitaires ; affirmations sensibles (dose,
+toxicité, interactions). `mycologie` : bases taxonomiques et sociétés mycologiques > guides >
+forums ; espèces confondables obligatoires dans la charte ; jamais de conseil de comestibilité.
+
+### 3.3 Étiquettes
+
+- **Communes** à tout extrait : thème(s), profil, langue, source, niveau de source, nature,
+  date de publication, période de validité, référence d'unité (ex. « CGI art. 209 B »),
+  section, page, position.
+- **Spécifiques** au profil (§3.2), extraites par C06/C08 puis normalisées par le code.
+- Utilisées comme **filtres** à la recherche et comme **facteurs** de la hiérarchisation.
+
+### 3.4 Graphe typé
+
+- Entités résolues (alias, noms scientifiques, variantes FR/EN) ; relations typées en
+  **familles** : *normative* (modifie, abroge, applique, interprète, cite, déroge à),
+  *causale* (cause, favorise, inhibe, médie, modère), *épistémique* (confirme, contredit,
+  nuance, réplique, échoue à répliquer), *structurelle* (fait partie de, est un).
+- Chaque relation porte : extraits de provenance, niveau de preuve, période de validité.
+- Graphe des **affirmations** (EdA §5) : affirmations élémentaires reliées par
+  *confirme / contredit*, utilisées pour qualifier les conflits.
+- Le graphe sert aux questions **à plusieurs sauts** (convention → article → décision ;
+  mécanisme → comportement → tactique, EdA §12) — pas à chaque recherche.
+
+### 3.5 Le temps
+
+- **Versions** : un texte qui change n'est pas écrasé ; nouvelle version avec
+  `valid_from` / `valid_to`, lien `remplace` vers l'ancienne (lignée).
+- **Date de référence** de chaque question : extraite (« en 2023… »), sinon aujourd'hui.
+- **Filtre dur** pour les profils qui l'exigent ; bonus de récence ailleurs.
+- **Veille d'actualisation** (E14) : chaque source a une classe de volatilité (profil) et une
+  date de prochaine vérification ; re-récupération, comparaison, nouvelle version si
+  changement substantiel (C14), ré-indexation et mise à jour du graphe.
+- **Qualification des conflits** (EdA §3) : *évolution* (le savoir ou la règle a changé),
+  *désaccord* (les sources se contredisent), *incertitude* (impossible de trancher).
+- Une source non revérifiée depuis plus que sa période de volatilité est marquée
+  « à revérifier » dans le dossier.
+
+### 3.6 Schéma de données (SQLite)
+
+`themes`, `theme_aliases`, `pages` (numéro de page du fichier et page imprimée, méthode
+natif / OCR, moteur, indicateurs de qualité, alertes), `figures` (page, description, légende),
+`documents` (avec `source_kind`, `jurisdiction`, `published_at`,
+`valid_from`, `valid_to`, `legal_status`, `lineage_id`, `version_no`, `supersedes_id`,
+`volatility`, `last_checked_at`, `next_check_at`, `credibility`), `document_themes`,
+`chunks` (avec `unit_ref`, `facets`, `evidence_level`, `replication_status`, `population`,
+`effect_size`, `valid_from`, `valid_to`, `flags`), `chunks_fts`, `embeddings`, `entities`,
+`entity_aliases`, `relations` (avec `family`, `evidence_level`, validité, provenance),
+`claims` (avec statut de croisement et nature du conflit), `cards` (entité, nœud, communauté),
+`queries`, `jobs`, `cycles`, `llm_calls`, `review_decisions`, `research_runs` (question,
+analyse, plan, trajectoire, dossier, métriques), `gaps` (lacunes → collectes ciblées),
+`user_profiles`, tables d'évaluation. Chaque session ajoute ses tables par migration.
+
+---
+
+## 4. Pile technique
+
+### 4.1 Inférence locale
 
 ```bash
-# Constructeur — MiMo 9B (≈ 6 Go en Q4_K_M ; Q5_K_M/Q6_K si la VRAM le permet)
+# MiMo 9B — constructeur et agent de recherche (≈ 6 Go en Q4_K_M)
 nice -n 10 llama-server -hf bartowski/MiMo-V2.6-Distill-Qwen-9B-GGUF:Q4_K_M \
   --jinja --reasoning-format deepseek -ngl 99 -c 65536 -np 4 --port 8080
-
-# Embeddings — bge-m3 multilingue (FR/EN), 1024 dimensions
+# Embeddings multilingues
 llama-server -hf gpustack/bge-m3-GGUF:Q8_0 --embedding --pooling cls -c 8192 -ub 8192 --port 8081
-
-# Re-classement — cross-encoder bge-reranker-v2-m3
+# Re-classement
 llama-server -hf gpustack/bge-reranker-v2-m3-GGUF:Q8_0 --reranking -c 8192 -ub 8192 --port 8082
+# OCR spécialisé (≈ 0,9 milliard de paramètres) — l'un ou l'autre, comparés en S05
+llama-server -hf ggml-org/GLM-OCR-GGUF --temp 0.1 --port 8083
+#   ou PaddleOCR-VL-1.6 : -m <modèle>.gguf --mmproj PaddleOCR-VL-1.6-GGUF-mmproj.gguf
+# Qwen3.8 (consommateur) — selon votre configuration actuelle, port 8090
 ```
 
-Points techniques établis (fiche du modèle) et leurs conséquences :
+- **Vision de MiMo** : le dépôt GGUF de MiMo contient son module vision (`mmproj`) ; `-hf` le
+  charge en principe automatiquement (sinon `--mmproj <fichier>`) — **à vérifier en S02**.
 
-- MiMo hérite de Qwen3.5 : **3 couches sur 4 en attention linéaire** (seules 8 couches sur 32
-  ont une attention complète) → cache KV réduit : 4 requêtes parallèles × 16 k tokens
-  (`-c 65536 -np 4`) restent abordables.
-- Réflexion activée par défaut (`<think>…</think>`), désactivable **par requête** avec
-  `chat_template_kwargs: {"enable_thinking": false}` ; `--reasoning-format deepseek` sépare la
-  réflexion dans `reasoning_content`.
-- Échantillonnage recommandé : `temperature 0.6, top_p 0.95, top_k 20` (étapes avec réflexion) ;
-  on testera `temperature 0.2–0.3` pour l'extraction sans réflexion.
+- MiMo hérite de l'architecture Qwen3.5 (3 couches sur 4 en attention linéaire) → cache KV
+  réduit, 4 requêtes parallèles abordables. Réflexion activable par requête
+  (`chat_template_kwargs.enable_thinking`). Échantillonnage recommandé : `0.6 / 0.95 / 20`.
+- **À vérifier en S02** : contrainte de schéma JSON combinée à la réflexion ; efficacité du
+  cache de préfixe.
+- Embeddings et re-classement : bge-m3 / bge-reranker-v2-m3 au départ, **comparés en S15** à
+  des modèles plus récents (EdA §10) ; ils peuvent tourner sur CPU.
 
-Points **à vérifier empiriquement en S02** :
-
-- contrainte de schéma JSON (`response_format`) **combinée** à la réflexion : si la grammaire
-  bride le `<think>`, on applique la stratégie « réflexion libre puis JSON extrait du contenu +
-  validation + réparation » ;
-- efficacité du cache de préfixe avec cette architecture hybride (on place de toute façon la
-  partie stable — système + charte — en tête de prompt).
-
-### 3.2 Profils de modèles et affectation par étape
+### 4.2 Profils de modèles et affectation par étape
 
 ```yaml
 models:
-  mimo-9b:
-    base_url: http://127.0.0.1:8080/v1
-    model: MiMo-V2.6-Distill-Qwen-9B
-    sampling: {temperature: 0.6, top_p: 0.95, top_k: 20}
-    slots: 4
-  qwen38-27b:                       # votre modèle principal, s'il est chargé
-    base_url: http://127.0.0.1:8090/v1
-    model: Qwen3.8-27B
-    slots: 1
-
-stages:                              # liste = ordre de préférence, avec repli
-  theme_charter:        {profiles: [qwen38-27b, mimo-9b], thinking: true}
-  doc_verification:     {profiles: [mimo-9b], thinking: true}
-  doc_second_opinion:   {profiles: [qwen38-27b, mimo-9b], thinking: true}
-  passage_verification: {profiles: [mimo-9b], thinking: false}
-  chunk_enrichment:     {profiles: [mimo-9b], thinking: false}
-  claim_crosscheck:     {profiles: [qwen38-27b, mimo-9b], thinking: true}
-  entity_card:          {profiles: [qwen38-27b, mimo-9b], thinking: true}
-  research_agent:       {profiles: [mimo-9b-rag, mimo-9b], thinking: false}  # mimo-9b-rag = MiMo + LoRA (S13)
+  mimo-9b:    {base_url: http://127.0.0.1:8080/v1, model: MiMo-V2.6-Distill-Qwen-9B, slots: 4}
+  qwen38-27b: {base_url: http://127.0.0.1:8090/v1, model: Qwen3.8-27B, slots: 1}
+  ocr:        {base_url: http://127.0.0.1:8083/v1, model: GLM-OCR, slots: 2}
+stages:                         # liste = préférence, avec repli si le serveur ne répond pas
+  ocr_page:               {profiles: [ocr]}
+  figure_description:     {profiles: [mimo-9b], thinking: false}
+  ocr_arbitration:        {profiles: [mimo-9b], thinking: true}
+  theme_charter:          {profiles: [qwen38-27b, mimo-9b], thinking: true}
+  doc_verification:       {profiles: [mimo-9b], thinking: true}
+  doc_second_opinion:     {profiles: [qwen38-27b, mimo-9b], thinking: true}
+  passage_verification:   {profiles: [mimo-9b], thinking: false}
+  chunk_enrichment:       {profiles: [mimo-9b], thinking: false}
+  conflict_qualification: {profiles: [qwen38-27b, mimo-9b], thinking: true}
+  situation_analysis:     {profiles: [mimo-9b], thinking: true}
+  research_plan:          {profiles: [mimo-9b], thinking: true}
+  evidence_selection:     {profiles: [mimo-9b], thinking: false}
+consumers:
+  qwen38-27b: {context_budget_tokens: 8000}
 ```
 
-Le profil préféré est utilisé s'il répond, sinon on se replie sur le suivant. Ainsi, quand
-Qwen3.8-27B est chargé, les étapes rares mais exigeantes en profitent ; le gros volume
-(extraits) reste sur MiMo 9B, rapide.
+### 4.3 Cohabitation des modèles
 
-**Cohabitation des modèles en mémoire** — trois scénarios, tous gérés par la configuration :
+| Scénario | Fonctionnement |
+|---|---|
+| A. Tout tient en mémoire | Démon actif à tout moment, en priorité basse, slots limités |
+| B. Alternance | Plages horaires et/ou bascule de modèles (`llama-swap` ou mode multi-modèles de `llama-server`). Constructeur absent → étapes LLM en attente, collecte et indexation continuent ; l'agent de recherche peut alors utiliser Qwen3.8 (repli) |
+| C. Un seul modèle | Toutes les étapes sur Qwen3.8-27B : plus lent, meilleure qualité |
 
-| Scénario | Quand | Fonctionnement |
-|---|---|---|
-| A. Tout tient en mémoire | Beaucoup de VRAM / mémoire unifiée | Le démon tourne à tout moment, en priorité basse, avec un nombre de slots limité |
-| B. Alternance | VRAM insuffisante pour Qwen3.8 + MiMo | Plages horaires (ex. 23 h–7 h) et/ou bascule de modèles via `llama-swap` (ou le mode multi-modèles de `llama-server` si votre version le propose). Si le constructeur ne répond pas, les étapes LLM attendent ; collecte et indexation continuent |
-| C. Un seul modèle | Pas envie de gérer MiMo | Toutes les étapes pointent sur Qwen3.8-27B : plus lent, meilleure qualité |
+### 4.4 Stockage
 
-Les modèles d'embedding et de re-classement (≈ 1,2 Go à eux deux) peuvent tourner sur CPU.
+SQLite (WAL) pour tout l'état ; FTS5 (`unicode61 remove_diacritics 2`) pour la recherche
+lexicale ; vecteurs float16 en blobs + recherche exacte numpy par sous-arbre (interface
+`VectorStore` pour passer à LanceDB/Qdrant au-delà de ~300 000 extraits) ; graphe en tables ;
+exports GraphML/JSON.
 
-### 3.3 Stockage
+### 4.5 Collecte et connecteurs
 
-| Besoin | Choix v1 | Pourquoi | Évolution |
-|---|---|---|---|
-| État, documents, extraits, graphe, journal | **SQLite** (WAL), un seul fichier | Transactionnel, zéro serveur, sauvegarde = copie de fichier | — |
-| Recherche lexicale BM25 | **FTS5** intégré à SQLite (`unicode61 remove_diacritics 2`) | Déjà présent dans Python, insensible aux accents | — |
-| Vecteurs | **Blobs float16 dans SQLite + recherche exacte numpy** par sous-arbre de thème | Jusqu'à ~300 000 vecteurs, la recherche exacte est plus précise qu'un index approché et prend < 100 ms | Interface `VectorStore` → LanceDB ou Qdrant embarqué si le volume l'exige |
-| Graphe | **Tables SQLite** (entités, alias, relations, communautés) | Volume modeste, requêtes simples (voisins, chemins courts) | Exports GraphML / JSON (LightRAG, Neo4j…). KùzuDB, cité dans le texte d'origine, n'est plus maintenu à notre connaissance : on l'évite |
+- Récupérateur `httpx` asynchrone : `robots.txt`, limite par domaine, cache, URL canoniques,
+  HTML/PDF/DOCX/EPUB, `trafilatura` + repli ; les PDF passent par la lecture page par page
+  (§4.7).
+- **Connecteurs génériques** : SearxNG local, Wikipédia, listes d'URL, flux RSS, `inbox/`.
+- **Connecteurs par profil** (accès et conditions d'utilisation à confirmer en S09) :
+  scientifiques (Europe PMC, OpenAlex, Crossref et ses données de rétractation) ; juridiques
+  français (Légifrance et Judilibre via l'API PISTE — clé gratuite —, BOFiP, EUR-Lex) ;
+  géorgiens (matsne.gov.ge, site du service des recettes) ; mycologiques (MycoBank, Index
+  Fungorum). Les sources dans une langue non couverte peuvent être traduites par le
+  constructeur, avec mention.
 
-### 3.4 Collecte et extraction
+### 4.6 Démon
 
-- `httpx` asynchrone, agent utilisateur identifiable, respect de `robots.txt`, limite par
-  domaine (≈ 1 requête / 2 s), cache brut par empreinte d'URL, `ETag`/`Last-Modified`.
-- Normalisation des URL (suppression `utm_*`, fragments), suivi des redirections, URL canonique.
-- Extraction : `trafilatura` (texte principal, titre, date, auteur) avec repli maison ;
-  `pypdf`/`pymupdf` pour les PDF (numéros de page conservés) ; `python-docx`.
-- Structure préservée : titres → Markdown `#`, listes, tableaux en Markdown quand c'est possible.
+Boucle `asyncio`, sémaphores par ressource, tourniquet entre thèmes, priorité aux demandes
+manuelles et aux collectes ciblées, fichier PID, `SIGTERM` propre, `SIGHUP` = rechargement,
+`os.nice`, plages horaires, `ragc daemon pause`, unités `systemd --user` / `launchd`.
 
-### 3.5 Démon
+### 4.7 Lecture des documents (PDF, livres scannés, images)
 
-- Boucle `asyncio`, sémaphores par ressource (slots du constructeur, embeddings, requêtes web
-  par domaine), équité entre thèmes (tourniquet), priorité aux ajouts manuels.
-- Fichier PID + verrou, arrêt propre sur `SIGTERM`, rechargement de la configuration sur `SIGHUP`.
-- `os.nice`, plages horaires, `ragc daemon pause/resume`, unités `systemd --user` et `launchd`.
+Traitement **page par page**, chaque page gardant son numéro (pour citer « p. 147 ») :
+
+1. **Diagnostic de la page** : couche texte présente ? de bonne qualité (proportion de mots
+   reconnus dans la langue, caractères parasites, encodage cassé) ? page surtout image ?
+   tableaux, figures, formules ?
+2. **Texte natif** (`pymupdf`) si la couche texte est bonne : exact et instantané.
+3. **OCR spécialisé** sinon (page rendue en image à résolution suffisante, ≈ 200–300 dpi) :
+   modèle OCR servi par `llama-server` (:8083), sortie Markdown (titres, listes, **tableaux**),
+   température basse. Une couche texte de mauvaise qualité (ancien OCR) est **refaite**.
+4. **Vision de MiMo** (L02) pour les **figures, schémas, photos et graphiques** : description
+   factuelle et légende, indexées comme extraits de type `figure` liés à leur page — un schéma
+   de mécanisme devient cherchable.
+5. **Contrôle de l'OCR** :
+   - indicateurs automatiques par page : mots inconnus, répétitions en boucle, lignes
+     tronquées, ordre de lecture (colonnes), texte vide ;
+   - sur un **échantillon** de pages et sur toute page suspecte : second moteur OCR (ou
+     Tesseract), comparaison ; désaccord → **arbitrage par MiMo** (L03), qui voit l'image et
+     les deux transcriptions et ne garde que ce qui est **visible** sur la page ;
+   - page illisible → marquée, jamais inventée (`[illisible]`).
+6. **Structure des livres** : table des matières (signets du PDF, sinon détection des titres),
+   chapitres → sections, notes de bas de page rattachées, en-têtes et pieds de page retirés,
+   pagination imprimée vs pagination du fichier ; métadonnées : auteur, titre, **édition**,
+   année, ISBN (deux éditions = deux versions, §3.5).
+7. **Autres formats** : EPUB (structure native), images isolées (JPG, PNG, TIFF), DOCX, HTML.
+
+L'OCR est jugé **sur ses effets sur la recherche**, pas seulement au caractère près
+(EdA §13) : le cas E compare la recherche sur un livre scanné et sur le même livre en texte
+natif.
 
 ---
 
-## 4. Organisation des thèmes
+## 5. Construire : le pipeline en tâche de fond
 
-### 4.1 Arbre et charte
-
-- Un thème s'écrit `Pharmacologie > Champignons > Amanita muscaria` ou
-  `pharmacologie/champignons/amanita-muscaria` ; les nœuds intermédiaires sont créés au besoin.
-- Identifiant = chemin de *slugs* (sans accents) ; nom d'affichage et **alias** conservés
-  (« amanite tue-mouches », « fly agaric », « A. muscaria »).
-- Chaque nœud possède une **charte** (`charte.yaml`) générée par le prompt P01 à partir du nom,
-  de la charte du parent et des thèmes frères (pour éviter les chevauchements) :
-
-```yaml
-nom: Amanita muscaria
-chemin: pharmacologie/champignons/amanita-muscaria
-definition: >-
-  Pharmacologie et toxicologie de l'amanite tue-mouches : composés actifs, mécanismes,
-  effets, intoxications, usages documentés.
-perimetre_inclus: [acide iboténique, muscimol, muscarine, récepteurs GABA-A, syndrome panthérinien]
-perimetre_exclu: [recettes culinaires, identification pour consommation, Amanita phalloides]
-sous_themes_proposes: [toxicologie, composés actifs, usages traditionnels]
-mots_cles: {fr: [...], en: [...]}
-synonymes: [amanite tue-mouches, fly agaric, A. muscaria]
-confusions_a_eviter: [Amanita pantherina, Amanita caesarea]
-sources_prioritaires: [europepmc, wikipedia, agences sanitaires]
-affirmations_sensibles: [toxicité, dose, comestibilité, interactions, traitement]
-sensibilite: haute
-langues: [fr, en]
-verrouille: false          # true = le programme ne réécrit plus cette charte
-```
-
-- La charte est **modifiable à la main** ; une modification est détectée (empreinte) et prise en
-  compte au cycle suivant.
-
-### 4.2 Rattachement des documents
-
-- Un document est rattaché au **nœud le plus précis** qui lui correspond (décidé à la
-  vérification, E4), avec des thèmes secondaires éventuels (table `document_themes`).
-- Interroger un nœud = interroger son sous-arbre. Interroger plusieurs nœuds = union dédoublonnée.
-- Un document pertinent pour l'arbre mais sans nœud adapté déclenche une **proposition de
-  sous-thème** (création automatique jusqu'à une profondeur maximale, ou validation par vous,
-  selon `config.yaml`).
-
-### 4.3 Espace de travail
-
-```
-~/rag/                          (espace de travail, chemin libre)
-├── config.yaml
-├── ragcreator.db               (tout l'état + FTS5 + vecteurs)
-├── cache/raw/                  (pages et PDF téléchargés, par empreinte)
-├── themes/
-│   └── pharmacologie/
-│       ├── charte.yaml
-│       ├── inbox/              (déposez vos fichiers ici)
-│       ├── prompts/            (surcharges de prompts, facultatif)
-│       ├── fiches/             (fiches Markdown générées)
-│       └── champignons/
-│           └── amanita-muscaria/ …
-├── reports/                    (un rapport Markdown par cycle)
-├── exports/
-└── logs/
-```
-
----
-
-## 5. Le pipeline, étape par étape
-
-### 5.1 États
-
-- **Document** : `decouvert → trie → recupere → precontrole → verifie (accepte | rejete | en_revue)
-  → decoupe → extraits_verifies → enrichi → indexe`, plus `echec_recuperation`, `rejete_precontrole`.
-- **Thème** : `nouveau → charte → collecte → consolidation → stable` (+ `pause`) ; un thème
-  `stable` est revisité périodiquement (ex. tous les 30 jours) pour les nouvelles publications.
-- **Cycle** : une passe complète E1 → E12 sur un thème, avec son rapport.
-
-### 5.2 Tableau des étapes
-
-| # | Étape | LLM ? | Réflexion | Entrée → Sortie |
+| # | Étape | Prompts | Réflexion | Ce qu'elle produit |
 |---|---|---|---|---|
-| E0 | **Charte** du thème | P01, P02 | oui | nom + charte parente → charte, requêtes initiales |
-| E1 | **Découverte** | P02, P03 | non | requêtes → candidats (titre, URL, extrait) → **tri LLM sur les extraits de résultats** avant tout téléchargement |
-| E2 | **Récupération & extraction** | — | — | URL/fichier → texte structuré + métadonnées |
-| E3 | **Pré-contrôles** déterministes | — | — | longueur, langue, doublon exact (SHA-256), quasi-doublon (MinHash), ratio de bruit, listes de domaines |
-| E4 | **Vérification documentaire** | P04, P05 | oui | charte + métadonnées + échantillon → scores, rattachement, décision |
-| E5 | **Découpage** structurel | — | — | sections → extraits de 300–450 tokens, chevauchement léger, section parente conservée |
-| E6 | **Vérification des extraits** | P06 | non | lots de 6 extraits → garder/écarter, utilité, nature, affirmations sensibles |
-| E7 | **Enrichissement** | P07, P08 | non | résumé du document (1×/doc) ; par extrait : contexte, questions, mots-clés, entités, relations |
-| E8 | **Indexation** | — | — | embeddings (texte contextualisé + questions), FTS5 |
-| E9 | **Graphe** : résolution d'entités | P09 | non | normalisation, alias, similarité floue + vectorielle, arbitrage LLM des cas ambigus |
-| E10 | **Vérification croisée** | P10 | oui | affirmation sensible + passages d'autres sources → concordante / contradictoire / nuancée / source unique |
-| E11 | **Synthèses** | P11, P12, P13 | oui | fiches d'entités, résumés de communautés, synthèse de thème — chaque phrase citée |
-| E12 | **Analyse de couverture** | P14 | oui | couverture par sous-thème → lacunes, nouvelles requêtes, continuer ou arrêter |
-| E13 | **Évaluation** | P15, P16 | mixte | jeu de questions → métriques de recherche et de réponse |
+| E0 | **Charte et profil** | C01, C02 | oui | charte, profil de domaine, requêtes initiales |
+| E1 | **Découverte** | C02, C03 | non | candidats des connecteurs du profil, **triés sur titre et extrait** avant téléchargement |
+| E2 | **Récupération et lecture** | L01, L02, L03 | non | texte structuré page par page (natif ou OCR), figures décrites, OCR contrôlé, structure du livre, métadonnées (§4.7) |
+| E3 | **Pré-contrôles** | — | — | rejets motivés sans LLM : longueur, langue, doublons exacts et quasi-doublons, bruit, domaines |
+| E4 | **Vérification documentaire** | C04, C05 | oui | pertinence, fiabilité, qualité, crédibilité multicritère, rattachement, décision |
+| E5 | **Datation et versions** | C07 | non | dates de publication et de validité, statut juridique, lignée de versions (règles déterministes pour les sources officielles, LLM sinon) |
+| E6 | **Découpage par profil** | — | — | unités naturelles (article de loi, section scientifique), 300–450 tokens, section parente |
+| E7 | **Vérification et étiquetage des extraits** | C06 | non | garder/écarter, nature, niveau de preuve, population, taille d'effet, affirmations sensibles |
+| E8 | **Enrichissement** | C08 | non | contexte, questions, mots-clés FR/EN, entités, **relations typées** |
+| E9 | **Indexation** | — | — | embeddings (texte contextualisé + questions), FTS5, index des étiquettes et des dates |
+| E10 | **Graphe** | C09 | non | entités résolues, relations normalisées par famille, communautés |
+| E11 | **Croisement et conflits** | C10 | oui | affirmations sensibles croisées ; conflits qualifiés (évolution / désaccord / incertitude) |
+| E12 | **Fiches** | C11, C12 | oui | fiches d'entités et **fiches de nœud** (la carte), chaque phrase citée et contrôlée |
+| E13 | **Couverture** | C13 | oui | lacunes par sous-thème, nouvelles requêtes, continuer / arrêter |
+| E14 | **Veille d'actualisation** | C14 | oui | nouvelles versions, abrogations, rétractations ; marquage « à revérifier » |
 
-### 5.3 La vérification en détail (exigence centrale)
+### 5.1 Vérification documentaire (E4) et extraits (E7)
 
-**E3 — Pré-contrôles (gratuits, sans LLM).** Texte < 300 mots, langue hors configuration,
-doublon exact ou quasi-doublon (> 0,9 de similarité MinHash), page majoritairement
-navigation/publicité, domaine en liste noire → rejet motivé, sans appeler le modèle.
-
-**E4 — Vérification documentaire (P04).** Le modèle reçoit : la charte résumée, le sous-arbre
-des thèmes, les métadonnées (titre, URL, domaine, niveau de source, date, auteur), la liste des
-titres de sections et un **échantillon** (début ≈ 1 500 tokens, milieu ≈ 600, fin ≈ 400). Il
-renvoie, avec une grille notée et ancrée (0 = …, 5 = …) :
-
-- `pertinence` (0–5), `fiabilite` (0–5), `qualite` (0–5) ;
-- `type_source` (article scientifique, agence, encyclopédie, presse, blog, forum, commercial…) ;
-- `biais` détectés (commercial, militant, sensationnaliste) et `signaux_alerte` (affirmations
-  dangereuses, confusion d'espèces, absence de sources) ;
-- `theme_le_plus_precis` dans l'arbre + `themes_secondaires` + `sous_theme_propose` éventuel ;
-- `decision` proposée et `justification` (3 phrases max).
-
-**La décision finale est calculée par le code** :
-
-```
-score = 0,45·pertinence + 0,30·fiabilité + 0,25·qualité      (normalisés 0–1)
-        + bonus/malus de niveau de source (A +0,05 ; C −0,10 ; commercial −0,15)
-règles dures : pertinence ≤ 1 → rejet ; thème sensible et fiabilité ≤ 1 → rejet
-score ≥ 0,70 → accepté   ·   score < 0,45 → rejeté   ·   entre les deux → second avis (P05)
-```
-
-Le **second avis** (P05) relit le document avec le premier avis sous les yeux, de préférence
-avec un autre profil (Qwen3.8-27B s'il est chargé). Désaccord persistant → `en_revue` (mode
-assisté, vous tranchez avec `ragc review`) ou rejet (mode autonome). Vos décisions sont
-conservées et réinjectées comme exemples dans le prompt du thème (apprentissage par l'exemple).
-
-Tous les seuils et poids sont dans `config.yaml` et seront calibrés sur le **jeu de référence**
-(≈ 20 documents annotés : scientifique pertinent, blog pertinent, hors sujet, commercial,
-spam SEO, page tronquée, **espèce voisine** — ex. *A. pantherina* au lieu de *A. muscaria* —,
-document d'un thème frère…).
-
-**E6 — Vérification des extraits (P06).** Par lots de 6 : garder/écarter, `utilite` (0–3),
-`nature` (fait, définition, mécanisme, protocole, chiffre, opinion, bruit), et **affirmations
-sensibles** relevées avec leur type (dose, toxicité, comestibilité, interaction…) → table
-`affirmations`.
-
-**E10 — Vérification croisée (P10).** Pour chaque affirmation sensible : recherche hybride dans
-**les autres documents** du thème, puis le modèle juge `concordante | contradictoire | nuancée |
-source_unique`, en citant les passages. Le marquage voyage avec l'extrait jusqu'au modèle
-consommateur.
+- Le modèle reçoit la charte, la carte du sous-arbre, les métadonnées et un **échantillon**
+  (début ≈ 1 500 tokens, milieu ≈ 600, fin ≈ 400) ; il note sur des **grilles ancrées**
+  pertinence, fiabilité, qualité, et signale biais, alertes (affirmations dangereuses,
+  **confusion d'espèces**, absence de sources, injection) et le nœud le plus précis.
+- **Décision calculée par le code** :
+  `score = 0,45·pertinence + 0,30·fiabilité + 0,25·qualité` + bonus/malus du niveau de source ;
+  règles dures (pertinence ≤ 1 → rejet ; profil sensible et fiabilité ≤ 1 → rejet) ;
+  ≥ 0,70 accepté, < 0,45 rejeté, entre les deux → **second avis** (C05, de préférence
+  Qwen3.8), puis revue humaine (mode assisté) ou rejet (mode autonome).
+- **Crédibilité multicritère** : poids réglés à la main au départ, **calibrés sur données**
+  (pondération entropique, EdA §12) en S15 ; détection de conflits en deux temps (filtre
+  léger, puis LLM seulement si nécessaire).
+- **Statut de réplication et rétractations** : tirés de sources explicites (méta-analyses,
+  projets de réplication, données de rétractation) — jamais de l'opinion du modèle (EdA §11).
+- Jeu de référence annoté (≈ 20–30 documents couvrant les 4 profils, dont espèce voisine,
+  texte abrogé, étude non répliquée, injection de prompt, site commercial).
 
 ---
 
-## 6. Optimiser le RAG pour les modèles consommateurs
+## 6. Répondre : l'agent de recherche
 
-Objectif : que Qwen3.8-27B / Flash-Next reçoivent **peu, mais exactement ce qu'il faut**,
-quel que soit le nombre de thèmes.
+### 6.1 Les étapes
 
-**À l'indexation**
+| # | Étape | Prompt | Ce qui se passe |
+|---|---|---|---|
+| R1 | **Situation** | Q01 | acteurs, objectif, contraintes, juridictions, **date de référence**, ambiguïtés, hypothèses |
+| R2 | **Angle** | (Q01) | angle détecté dans la question, option `--focus`, profil utilisateur |
+| R3 | **Plan** | Q02 | graphe de sous-questions typées : question, thèmes (choisis sur la **carte**), filtres d'étiquettes et de dates, **poids**, dépendances, **contre-point** |
+| R4 | **Premier coup** | — | toutes les sous-questions en parallèle : recherche hybride avec la question entière + la sous-question, re-classement **par sous-question**, consolidation (EdA §1, §11) |
+| R5 | **Approfondissement** | — | effort réparti selon le rendement de chaque sous-question (exploration / exploitation, EdA §12) ; **escalade** extrait → section → document → voisins du graphe → fiches (EdA §2) ; 2 tours maximum |
+| R6 | **Contrôles** | Q03 | version en vigueur, **fidélité** de chaque preuve à la sous-question, adéquation de la source, conflits qualifiés |
+| R7 | **Hiérarchisation** | — | calcul de l'importance (§6.4) |
+| R8 | **Dossier** | Q04 | dossier classé, étiqueté, sourcé, avec lacunes → collectes ciblées |
 
-1. **Extraits autoportants** : en-tête `[Thème > Sous-thème] Titre — Section` + 2–3 phrases de
-   contexte (P08) ; un extrait isolé reste compréhensible.
-2. **Multi-représentation** : chaque extrait est indexé par son texte contextualisé, par les
-   **questions auxquelles il répond** et par ses mots-clés FR/EN → la question de l'utilisateur
-   rencontre une question « jumelle ».
-3. **Petit-vers-grand** : on cherche sur de petits extraits (précision) et on peut élargir à la
-   section parente (contexte) si le budget le permet.
-4. **Fiches pré-calculées** : une fiche par entité importante (ex. muscimol, *Amanita muscaria*),
-   sourcée phrase par phrase → réponse directe aux questions fréquentes.
+Si l'ambiguïté est forte (R1), l'agent **pose la question** avant de chercher (mode
+interactif) ou **annonce son hypothèse** (mode autonome). Avec `--show-plan` /
+`--validate-plan`, l'utilisateur voit et corrige le plan avant R4.
 
-**À la requête**
+### 6.2 Format du plan (exemple, cas A)
 
-5. **Routage multithématique** : la question est comparée aux chartes (définition, mots-clés,
-   alias) ; tous les thèmes au-dessus d'un seuil sont interrogés (P17 seulement en cas d'ambiguïté).
-6. **Expansion par alias** : « amanite tue-mouches » → *Amanita muscaria*, « fly agaric » ;
-   FR ↔ EN via les chartes et la table des alias d'entités.
-7. **Recherche hybride** BM25 + vecteurs (texte et questions) → fusion RRF → **re-classement
-   cross-encoder** (top 40 → top 8) → diversité (max 2 extraits par document).
-8. **Contexte compact annoté** : extraits groupés par thème et source, numérotés `[S1]…`,
-   chaque source avec niveau, date et marquages (`⚠ contradiction`, `source unique`) ; budget
-   en tokens par profil consommateur (8 000 par défaut pour Qwen3.8).
+```json
+{
+  "date_reference": "2026-10-06",
+  "situation": {
+    "acteurs": ["résident fiscal français", "société à créer en Géorgie"],
+    "objectif": "réduire légalement l'imposition",
+    "hypotheses": ["l'utilisateur reste domicilié en France"],
+    "ambiguites": []
+  },
+  "angle": {"source": "defaut", "focus": null},
+  "sous_questions": [
+    {"id": "SQ1", "question": "Quels régimes d'imposition des sociétés existent en Géorgie, à quelles conditions ?",
+     "themes": ["droit/fiscalite/georgie"], "filtres": {"juridiction": "GE", "nature": ["loi", "doctrine_administrative"]},
+     "poids": 3, "depend_de": []},
+    {"id": "SQ2", "question": "Un résident français reste-t-il imposable en France sur une société étrangère qu'il contrôle ?",
+     "themes": ["droit/fiscalite/france"], "filtres": {"juridiction": "FR", "nature": ["loi", "jurisprudence", "doctrine_administrative"]},
+     "poids": 3, "depend_de": []},
+    {"id": "SQ3", "question": "Que prévoit la convention fiscale franco-géorgienne ?",
+     "themes": ["droit/fiscalite/international"], "filtres": {"nature": ["convention"]}, "poids": 3, "depend_de": []},
+    {"id": "SQ4", "question": "Quelles décisions ont appliqué ces règles à des montages comparables ?",
+     "themes": ["droit/fiscalite/france", "droit/fiscalite/georgie"], "filtres": {"nature": ["jurisprudence"]},
+     "poids": 2, "depend_de": ["SQ2", "SQ3"]},
+    {"id": "CP1", "type": "contre_point", "question": "Dans quels cas ce montage est-il requalifié ou sanctionné ?",
+     "themes": ["droit/fiscalite/france"], "poids": 2, "depend_de": ["SQ2"]}
+  ],
+  "budget": {"recherches_max": 12, "tokens_dossier": 8000}
+}
+```
 
-**Interfaces de consommation**
+### 6.3 Contrôles (R6)
 
-- **Outils MCP / fonctions (RAG agentique, recommandé pour Qwen3.8)** :
-  `rag_themes()`, `rag_search(query, themes?, k?)`, `rag_fiche(entite)`,
-  `rag_voisins(entite, relation?)`, `rag_source(id)`, `rag_contradictions(theme|entite)`.
-  Le modèle choisit lui-même thèmes et requêtes, enchaîne plusieurs recherches, et chaque
-  réponse d'outil est compacte et plafonnée en tokens.
-- **Proxy compatible OpenAI** `/v1/chat/completions` qui injecte le contexte puis relaie vers
-  votre `llama-server` Qwen3.8 → utilisable tel quel dans Open WebUI / LM Studio.
-- `ragc ask`, API HTTP `/search` `/context` `/ask`, exports JSONL / Markdown / GraphML.
-- **Prompts système fournis** pour le consommateur (P18, P19) : citer `[S#]`, dire « absent du
-  corpus » plutôt qu'inventer, signaler contradictions et prudence sur les sujets sensibles.
+- **Temps** : filtre dur par profil ; versions remplacées exclues ou présentées comme
+  historiques ; sources « à revérifier » signalées.
+- **Fidélité** : chaque preuve retenue doit répondre à sa sous-question et dire réellement ce
+  qu'on lui fait dire (Q03) ; contrôle automatique des identifiants cités.
+- **Adéquation** : une sous-question juridique exige des sources juridiques ; une
+  sous-question médicale, des sources médicales (EdA §8).
+- **Conflits** : qualifiés (évolution / désaccord / incertitude) et présentés, jamais lissés.
 
-### 6.4 Agent de recherche délégué : MiMo, guidé puis éventuellement entraîné
+### 6.4 Hiérarchisation (R7)
 
-**Idée.** Au lieu que Qwen3.8 enchaîne lui-même 3 à 6 appels `rag_*` (chaque résultat
-encombrant son contexte et coûtant du temps à un modèle plus lourd), il appelle **un seul outil**
-`rag_research(question, themes?, budget?)`. Un **sous-agent MiMo 9B** mène la recherche :
-décomposer la question, choisir les thèmes, reformuler (alias, FR/EN), lancer les recherches,
-lire fiches et voisins du graphe, décider quand il a assez de preuves, puis rendre un
-**dossier de preuves** : passages retenus `[S#]`, marquages (contradiction, source unique),
-lacunes identifiées. Qwen3.8 rédige ensuite la réponse finale à partir de ce dossier.
+```
+importance = P × S × A × F × R
+P  poids de la sous-question (1–3), ajusté par l'angle et le profil utilisateur
+S  solidité (0–1) : échelle du profil, statut de réplication, crédibilité de la source
+A  applicabilité (0–1) : juridiction, population, contexte comparés à la situation (R1)
+F  fraîcheur (0–1) : 1 si à jour ; pénalité si « à revérifier » ; 0 si non en vigueur (filtre dur)
+R  pertinence (0–1) : score du re-classement par sous-question
+```
 
-**Pourquoi c'est prometteur**
+Poids et forme (produit ou moyenne géométrique pondérée) dans `config.yaml`, calibrés en S15.
 
-- MiMo est déjà chargé pour la construction, entraîné à l'usage d'outils et publié par Xiaomi
-  comme point de départ pour l'apprentissage par renforcement agentique (licence MIT).
-- 9B dense à attention majoritairement linéaire : boucle de recherche nettement plus rapide
-  qu'avec Qwen3.8-27B dense ; Qwen3.8 garde un contexte propre pour raisonner.
-- La tâche est **étroite et répétitive** (mêmes outils, même format de sortie) : c'est le cas où
-  un petit modèle spécialisé rattrape souvent un grand modèle généraliste.
+### 6.5 Le dossier de preuves (R8)
 
-**Démarche en trois paliers — on ne passe au suivant que si la mesure le justifie**
+```
+DOSSIER — question · date de référence · hypothèses · angle
+SQ2 (★★★) Un résident français reste-t-il imposable… ?
+  [S3] Texte officiel en vigueur · FR · CGI art. … (version du …) · solidité forte
+       « … extrait … »
+  [S4] Conseil d'État, … · solidité forte · applique [S3]
+  ⚠ Évolution : ancienne rédaction jusqu'au … (non applicable à la date de référence)
+CP1 (★★) Contre-point : …
+LACUNES : jurisprudence géorgienne absente de la base → collecte ciblée programmée
+```
+
+Deux formats : Markdown compact (injection dans le contexte) et JSON (réponse d'outil).
+Budget plafonné par modèle consommateur.
+
+### 6.6 Angle et profil utilisateur
+
+- Sources de l'angle, de la plus forte à la plus faible : validation du plan > option
+  `--focus` > formulation de la question > profil utilisateur > défaut.
+- **Profil utilisateur** (`profils_utilisateurs/<nom>.yaml`) : vision exprimée en clair
+  (« les décisions sont d'abord biologiques »), thèmes privilégiés et leurs poids, contre-point
+  actif ou non, mode ambiguïté (demander / supposer). Il influence aussi la **collecte** :
+  les thèmes privilégiés sont approfondis en priorité.
+- L'angle **change le plan** (tronc, ponts vers l'action), pas les étiquettes de solidité.
+
+### 6.7 Deux modes d'agent, comparés en S15
+
+| Mode | Principe | Atouts |
+|---|---|---|
+| **Plan → exécution** (défaut) | MiMo produit le plan ; le code exécute recherches, re-classement, allocation d'effort ; MiMo sélectionne et assemble | Prévisible, économe, contrôlable (EdA §2) |
+| **Navigation libre** | MiMo explore lui-même avec des outils : `rag_carte`, `rag_chercher`, `rag_lire` (extrait / section / document), `rag_voisins`, `rag_fiche` | Plus souple sur les corpus très structurés (EdA §4) |
+
+### 6.8 Interfaces de consommation
+
+- **Outil de haut niveau** `rag_research(question, focus?, date_reference?, budget?)` → dossier
+  (l'agent MiMo fait le travail) — recommandé pour Qwen3.8.
+- **Outils de bas niveau** (ceux de la navigation libre), pour que Qwen3.8 cherche lui-même.
+- **Proxy compatible OpenAI** : intercepte la conversation, appelle `rag_research`, injecte
+  le dossier et le prompt consommateur (Q06), relaie vers le `llama-server` de Qwen3.8
+  → utilisable dans Open WebUI / LM Studio.
+- **Serveur MCP** exposant ces outils, schémas compacts (EdA §9).
+- `ragc ask "…" [--focus …] [--date …] [--show-plan] [--validate-plan]`, API HTTP, exports.
+- Le prompt consommateur impose de s'appuyer sur le dossier : les gros modèles ont tendance à
+  préférer leurs connaissances internes (EdA §11).
+
+### 6.9 Spécialiser MiMo (paliers)
 
 | Palier | Contenu | Session |
 |---|---|---|
-| 0. Guidé par prompt | MiMo + prompt P20 `research_agent` + outils `rag_*` ; aucun entraînement | S11 |
-| 1. Mesure comparative | Sur le jeu d'évaluation : (a) recherche hybride simple sans agent, (b) Qwen3.8 utilisant les outils, (c) MiMo agent délégué → rappel des preuves, fidélité de la réponse finale, latence, tokens consommés | S12 |
-| 2. Spécialisation (conditionnelle) | Fine-tuning **LoRA** de MiMo sur des trajectoires de recherche réussies, puis réévaluation | S13 |
+| 0 | MiMo guidé par prompts (Q01–Q05) | S08, S14 |
+| 1 | Comparaison : (a) recherche simple améliorée, (b) Qwen3.8 outillé, (c) MiMo plan → exécution, (d) MiMo navigation libre — qualité du plan, rappel, bonne version, fidélité, latence, tokens | S15 |
+| 2 | Entraînement **LoRA** (SFT) sur les meilleures trajectoires d'un professeur (Qwen3.8-27B), filtrées par critères vérifiables ; planificateur et sélecteur entraînés séparément (EdA §1) | S16 |
+| 3 | **Renforcement à récompense vérifiable** : couverture des sous-questions attendues, bonne version, rappel des extraits attendus, fidélité des citations, coût en tokens — forme de récompense étudiée avec soin (EdA §7) | S16 |
 
-**Critère de déclenchement proposé du palier 2** : MiMo-agent guidé est au moins 2× plus rapide
-que Qwen3.8-agent **mais** perd plus de 5 points de rappel des preuves ou de fidélité. S'il fait
-déjà aussi bien, on n'entraîne pas.
-
-**Comment on entraînerait (S13)**
-
-1. **Données générées par le RAG lui-même** : les questions d'évaluation ont des extraits
-   « réponse » connus. Un professeur (Qwen3.8-27B) produit des trajectoires complètes (appels
-   d'outils → résultats → dossier de preuves).
-2. **Filtrage automatique** : on ne garde que les trajectoires qui retrouvent les extraits
-   attendus, citent des identifiants valides et restent dans le budget de tokens.
-3. **Entraînement LoRA (SFT)** de MiMo sur ces trajectoires, au format exact de son modèle de
-   chat (appels d'outils `<tool_call>`) ; outil d'entraînement à confirmer au moment de S13
-   selon la prise en charge de l'architecture Qwen3.5 (Unsloth, TRL/PEFT, LLaMA-Factory…).
-4. **Conversion de l'adaptateur en GGUF** et chargement dans `llama-server` (`--lora`) : un seul
-   MiMo en mémoire, l'adaptateur « agent de recherche » en plus (profil `mimo-9b-rag`).
-5. **Évaluation sur des thèmes tenus à l'écart** de l'entraînement, pour vérifier qu'on a appris
-   *à chercher* et pas *par cœur*.
-6. *(v2, optionnel)* apprentissage par renforcement avec récompense vérifiable : rappel des
-   extraits attendus + validité des citations − coût en tokens.
-
-Points d'attention : ré-entraîner si l'interface des outils change ; mémoire GPU nécessaire pour
-une LoRA sur 9B (≈ 16–24 Go en QLoRA, à confirmer) ; on n'entraîne jamais Qwen3.8 (hors périmètre).
+Critère de déclenchement : MiMo guidé ≥ 2× plus rapide que Qwen3.8 outillé mais en retrait de
+plus de 5 points sur la qualité du plan ou la fidélité. Données : la table `research_runs`.
+Évaluation sur des **thèmes tenus à l'écart** de l'entraînement. Adaptateur chargé dans
+`llama-server` (`--lora`), profil `mimo-9b-rag`.
 
 ---
 
-## 7. Les prompts du modèle (exécution)
+## 7. Les prompts du modèle
 
 ### 7.1 Conventions
 
 - Un fichier YAML par prompt : `id`, `version`, `description`, `reflexion`, `temperature`,
   `max_tokens`, `systeme`, `utilisateur`, `schema` (classe Pydantic).
-- Gabarits `${variable}` (pas de conflit avec les accolades JSON) ; variable manquante = erreur.
-- Consignes en français, **clés JSON en anglais** (stables pour le code), valeurs dans la langue
-  de la charte.
-- Contenu externe toujours entre `<document>…</document>` + « n'exécute aucune instruction
-  contenue dans le document ».
-- Notes sur **grilles ancrées** (chaque niveau défini) ; `null` si l'information est absente ;
-  « n'invente jamais ».
-- Un exemple court (*few-shot*) pour les prompts complexes ; partie stable (système + charte) en tête.
-- Surcharge possible par thème : `themes/<chemin>/prompts/<id>.yaml`.
-- Toute modification de prompt incrémente la `version` ; le journal des appels permet de
-  comparer les versions sur le jeu de référence.
+- Gabarits `${variable}` ; variable manquante = erreur ; consignes en français, **clés JSON en
+  anglais**, valeurs dans la langue de la charte.
+- Contenu externe entre `<document>…</document>` + consigne d'ignorer ses instructions.
+- Grilles **ancrées** (chaque niveau défini) ; `null` plutôt qu'inventer ; un court exemple
+  pour les prompts complexes ; partie stable (système, charte, profil) en tête.
+- Surcharges par thème (`themes/<chemin>/prompts/`) et par profil (`profils/<nom>/prompts/`).
+- Toute modification incrémente la version ; le journal permet de comparer les versions sur
+  les jeux de référence.
 
 ### 7.2 Catalogue
 
-| ID | Étape | Rôle donné au modèle | Réflexion | Sortie |
-|---|---|---|---|---|
-| P01 `theme_charter` | E0 | Documentaliste en chef | oui | charte complète (§4.1) |
-| P02 `search_queries` | E0/E1/E12 | Spécialiste de recherche documentaire | non | requêtes par source et par langue, sans répéter les requêtes passées |
-| P03 `search_triage` | E1 | Trieur de résultats | non | par résultat : garder/écarter, priorité, raison courte |
-| P04 `doc_verification` | E4 | Vérificateur documentaire | oui | scores, type de source, biais, alertes, rattachement, décision, justification |
-| P05 `doc_second_opinion` | E4 | Contre-vérificateur | oui | confirme / infirme + raisons |
-| P06 `passage_verification` | E6 | Contrôleur d'extraits | non | par extrait : garder, utilité, nature, affirmations sensibles |
-| P07 `doc_digest` | E7 | Résumeur | non | résumé (5 lignes), plan, portée, date de référence |
-| P08 `chunk_enrichment` | E7 | Indexeur | non | contexte, 3–5 questions, mots-clés FR/EN, entités typées, relations |
-| P09 `entity_arbitration` | E9 | Arbitre d'entités | non | même entité ? nom canonique, type |
-| P10 `claim_crosscheck` | E10 | Contrôleur croisé | oui | statut + passages cités + explication |
-| P11 `entity_card` | E11 | Rédacteur de fiches | oui | fiche par sections, chaque phrase citée `[c:ID]` |
-| P12 `community_summary` | E11 | Synthétiseur | non | résumé d'un groupe d'entités liées |
-| P13 `theme_synthesis` | E11 | Rédacteur de synthèse | oui | synthèse du thème (agrège les sous-thèmes) |
-| P14 `coverage_analysis` | E12 | Directeur de collection | oui | lacunes, nouvelles requêtes, sous-thèmes, continuer/arrêter |
-| P15 `eval_questions` | E13 | Concepteur d'examen | non | questions + réponse attendue + type (factuelle, multi-sauts, transversale, sans réponse) |
-| P16 `eval_judge` | E13 | Juge | oui | fidélité, complétude, abstention correcte |
-| P17 `query_routing` | requête | Aiguilleur | non | thèmes cibles + reformulations |
-| P18 `answer_with_context` | requête | Assistant documentaire (consommateur) | au choix | réponse citée `[S#]` + avertissements |
-| P19 `agent_system` | requête | Agent outillé (consommateur) | au choix | prompt système pour l'usage des outils `rag_*` |
-| P20 `research_agent` | requête | Agent de recherche délégué (MiMo) | non | boucle d'outils `rag_*` → dossier de preuves `[S#]` + lacunes |
+**Lecture**
 
-Les **citations des synthèses sont contrôlées par le code** : un identifiant inconnu ou une
-phrase sans citation → rejet et nouvelle tentative, puis suppression de la phrase.
+| ID | Étape | Modèle | Réflexion | Sortie |
+|---|---|---|---|---|
+| L01 `ocr_page` | E2 | OCR spécialisé (:8083) | — | transcription Markdown de la page (consigne courte propre au modèle, ex. « OCR markdown » ; température 0,1) |
+| L02 `figure_description` | E2 | MiMo en vision | non | type de figure, description factuelle, légende, éléments lisibles (axes, étiquettes), aucune interprétation non visible |
+| L03 `ocr_arbitration` | E2 | MiMo en vision | oui | pour les passages en désaccord entre deux transcriptions : texte retenu, **seulement s'il est visible** sur l'image, sinon `[illisible]` |
+
+**Construction**
+
+| ID | Étape | Rôle | Réflexion | Sortie |
+|---|---|---|---|---|
+| C01 `theme_charter` | E0 | Documentaliste en chef | oui | charte + **profil de domaine** choisi |
+| C02 `search_queries` | E0/E1/E13 | Spécialiste de recherche documentaire | non | requêtes par connecteur et par langue, jamais répétées |
+| C03 `search_triage` | E1 | Trieur | non | garder / écarter, priorité, raison |
+| C04 `doc_verification` | E4 | Vérificateur documentaire | oui | scores ancrés, type de source, biais, alertes, nœud, décision, justification |
+| C05 `doc_second_opinion` | E4 | Contre-vérificateur | oui | confirme / infirme + raisons |
+| C06 `passage_verification` | E7 | Contrôleur et étiqueteur d'extraits | non | garder, nature, **niveau de preuve, population, taille d'effet**, affirmations sensibles |
+| C07 `doc_digest` | E5/E8 | Résumeur et datation | non | résumé, plan, portée, **dates de publication et de validité**, juridiction, référence de version |
+| C08 `chunk_enrichment` | E8 | Indexeur | non | contexte, questions, mots-clés FR/EN, entités, **relations typées par famille** |
+| C09 `entity_arbitration` | E10 | Arbitre d'entités | non | même entité ? nom canonique, type |
+| C10 `conflict_qualification` | E11 | Contrôleur croisé | oui | concordant / contradictoire / nuancé / source unique + **évolution / désaccord / incertitude** |
+| C11 `entity_card` | E12 | Rédacteur de fiches | oui | fiche par sections, chaque phrase citée |
+| C12 `node_card` | E12 | Cartographe | oui | fiche de nœud : contenu, sous-thèmes, points clés, lacunes |
+| C13 `coverage_analysis` | E13 | Directeur de collection | oui | lacunes, requêtes, sous-thèmes, continuer / arrêter |
+| C14 `update_check` | E14 | Veilleur | oui | changement substantiel ? nature, portée, versions concernées |
+
+**Réponse**
+
+| ID | Étape | Rôle | Réflexion | Sortie |
+|---|---|---|---|---|
+| Q01 `situation_analysis` | R1–R2 | Analyste | oui | situation, date de référence, ambiguïtés, hypothèses, angle détecté |
+| Q02 `research_plan` | R3 | Planificateur expert | oui | plan (§6.2) |
+| Q03 `evidence_selection` | R6 | Contrôleur de preuves | non | par preuve : garder, fidélité, applicabilité, raison |
+| Q04 `evidence_dossier` | R8 | Assembleur | non | synthèse par sous-question, lacunes, avertissements |
+| Q05 `research_agent_tools` | navigation libre | Agent de recherche outillé (MiMo) | non | boucle d'outils → dossier |
+| Q06 `consumer_answer` | consommation | Assistant documentaire (Qwen3.8) | au choix | réponse citée `[S#]`, prudences, lacunes |
+| Q07 `consumer_agent` | consommation | Agent outillé (Qwen3.8) | au choix | usage des outils `rag_*` |
+
+**Évaluation**
+
+| ID | Rôle | Réflexion | Sortie |
+|---|---|---|---|
+| V01 `eval_questions` | Concepteur d'examen | non | questions + réponses attendues + type (factuelle, multi-sauts, transversale, temporelle, sans réponse) |
+| V02 `eval_judge` | Juge (autre modèle que le constructeur si possible) | oui | fidélité, complétude, abstention ; contrôles déterministes privilégiés (EdA §3) |
 
 ---
 
 ## 8. Fonctionnement en tâche de fond
 
-- **Cycle** par thème : E1 → … → E12. Arrêt quand : couverture cible atteinte, nombre maximal de
-  cycles, **rendements décroissants** (< 10 % de nouveaux documents acceptés), ou budget horaire
-  de la nuit épuisé. Revisite périodique des thèmes stables.
-- **Rapport de cycle** (`reports/<date>_<theme>.md`) : documents vus / acceptés / rejetés (avec
-  motifs), cas en revue, contradictions détectées, sous-thèmes proposés, couverture, temps et
-  tokens consommés.
-- **Résilience** : `llama-server` indisponible → attente avec temporisation croissante, sans
-  marquer les documents en échec ; erreurs réseau → nouvelles tentatives ; bail expiré → tâche
-  reprise ; test d'arrêt brutal (`kill -9`) obligatoire.
-- **Discrétion** : priorité basse, plages horaires, pause sur batterie (optionnel), nombre de
-  slots limité, `ragc daemon pause`.
+- **Cycles** par thème : E1 → E13 ; arrêt sur couverture cible, nombre maximal de cycles,
+  **rendements décroissants** (< 10 % de nouveaux documents acceptés) ou budget de la nuit.
+- **Veille** (E14) planifiée selon la volatilité de chaque source.
+- **Collectes ciblées** issues des lacunes des questions (`gaps`), prioritaires.
+- **Rapports de cycle** (`reports/`) : vus / acceptés / rejetés avec motifs, revues en
+  attente, conflits nouveaux, nouvelles versions, couverture, temps et tokens.
+- **Résilience** : serveur absent → attente sans échec ; baux expirés repris ; test d'arrêt
+  brutal obligatoire.
 
 ---
 
 ## 9. Qualité, tests, évaluation
 
-- **Tests hors ligne** (par défaut) : `pytest` avec un **faux serveur compatible OpenAI** dont les
-  réponses dépendent de l'en-tête `X-RAGC-Prompt: <id>@<version>` ; aucun réseau, aucun modèle.
-- **Tests en conditions réelles** (`pytest --live`) : contre vos `llama-server`.
-- **Jeux de référence** : vérification documentaire (≈ 20 docs annotés), extraits, entités.
-- **Évaluation du RAG** (E13) : questions générées depuis un échantillon stratifié d'extraits,
-  filtrées (réponse uniquement dans l'extrait, pas de recopie mot à mot), plus questions
-  multi-sauts (graphe), transversales (plusieurs thèmes) et sans réponse ;
-  métriques Recall@k, MRR, nDCG, fidélité, abstention, latence ; **gain mesuré avec RAG vs sans
-  RAG** sur Qwen3.8-27B. Le juge (P16) est de préférence un autre modèle que le constructeur.
-- Historique des évaluations pour comparer les réglages (`ragc eval compare`).
+- **Hors ligne par défaut** : faux serveur compatible OpenAI (réponses selon l'en-tête
+  `X-RAGC-Prompt`), fixtures rédigées pour le projet, aucun réseau.
+- **Conditions réelles** : `pytest --live`.
+- **Cas de référence A–E** (`001_but.md` §7) : listes de sous-questions attendues validées par
+  l'utilisateur ; corpus de test par cas ; contrôles **déterministes** (articles, versions,
+  dates, identifiants cités) privilégiés aux juges LLM (EdA §3).
+- **Jeux de référence** : vérification documentaire, étiquetage de la solidité, entités,
+  **pages OCR** (pages imprimées, deux colonnes, tableaux, notes, figures, page dégradée)
+  transcrites à la main.
+- **Évaluation globale** : qualité du plan, Recall@k, MRR, bonne version, fidélité des
+  citations, respect de l'angle, abstention, latence, coût ; **évaluation des trajectoires**
+  de l'agent (EdA §10) ; gain mesuré avec / sans RAG sur Qwen3.8.
 
 ---
 
-## 10. Budget de performance (indicatif, à mesurer en S02 et S12)
+## 10. Budget de performance (indicatif, à mesurer)
 
-Hypothèses : MiMo Q4_K_M sur GPU grand public, 4 slots parallèles.
-
-| Étape | Appels | Coût estimé |
-|---|---|---|
-| E4 vérification doc (réflexion) | 1 par doc (+ second avis ~20 %) | 15–30 s / doc / slot |
-| E6 vérification extraits | 1 par lot de 6 | ~0,5 s / extrait (agrégé) |
-| E7 enrichissement | 1 par doc + 1 par extrait | 1–2 s / extrait (agrégé) |
-| E8 embeddings | lots | négligeable |
-| **Total** | 1 000 pages ≈ 3 000 extraits ≈ 150–300 docs | **≈ 2 à 4 h** |
+| Activité | Coût estimé |
+|---|---|
+| Construction : 1 000 pages ≈ 3 000 extraits ≈ 150–300 documents | ≈ 2 à 4 h (vérification, étiquetage, enrichissement, MiMo Q4, 4 slots) |
+| Lecture d'un livre scanné de 300 pages | OCR spécialisé ≈ quelques secondes par page → ≤ 1 h ; + descriptions de figures par MiMo ; à mesurer en S05 |
+| Question simple (recherche hybride + re-classement) | < 300 ms ; < 1,5 s avec re-classement |
+| Question complexe (Q01 + Q02 + recherches + Q03 + Q04) | ≈ 20 à 60 s avec MiMo, hors rédaction par Qwen3.8 |
 
 ---
 
@@ -518,43 +582,36 @@ Hypothèses : MiMo Q4_K_M sur GPU grand public, 4 slots parallèles.
 
 | Risque | Parade |
 |---|---|
-| JSON invalide d'un modèle 9B | Grammaire de schéma + Pydantic + réparation ; taux de validité suivi par prompt |
-| Variantes d'une même entité (RGPD / GDPR…) | Normalisation + alias + similarité floue et vectorielle + arbitrage P09 |
-| Confusion d'espèces (*A. muscaria* / *A. pantherina*) | Champ `confusions_a_eviter` de la charte, cas dédiés dans le jeu de référence |
-| Désinformation en pharmacologie / mycologie | Niveaux de source, vérification croisée, marquages transmis au consommateur |
-| Injection de prompt dans une page web | Balises, consigne explicite, détection de motifs, le code garde la décision finale |
-| Blocages web (captchas, limites) | SearxNG local + API ouvertes (Wikipédia, Europe PMC) ; jamais de contournement |
-| Concurrence GPU avec Qwen3.8 | Scénarios A/B/C (§3.2), plages horaires, attente si serveur absent |
-| Dérive thématique au fil des cycles | Charte de référence, rattachement au nœud le plus précis, rendements décroissants |
-| Droits d'auteur | Usage personnel, `robots.txt` respecté, source toujours citée, pas de redistribution |
-| Évolution de llama.cpp (paramètres, formats) | Client isolé derrière une interface, `ragc doctor`, tests en conditions réelles |
-| Agent MiMo entraîné qui apprend « par cœur » le corpus | Entraînement multi-thèmes, évaluation sur thèmes tenus à l'écart, palier 2 seulement si mesuré utile |
+| JSON invalide d'un modèle 9B | Grammaire de schéma + Pydantic + réparation ; taux de validité suivi |
+| Plan à côté de la plaque (mauvaise compréhension) | Analyse de situation explicite, ambiguïtés exposées, plan visible et corrigeable, cas de référence |
+| Sur-décomposition (trop de sous-questions, coût) | Budget de recherches, allocation selon le rendement, poids |
+| Version périmée présentée comme actuelle | Filtre dur, lignées de versions, veille, contrôle déterministe |
+| Complaisance (confirmer l'angle de l'utilisateur) | Solidité non négociable, contre-point, preuves notées sur leur force (EdA §11) |
+| Citations infidèles | Contrôle de fidélité (Q03), identifiants vérifiés par le code (EdA §8) |
+| Le consommateur ignore le dossier | Prompt Q06 strict ; mesure de l'usage du contexte |
+| Références ou affirmations inventées (y compris dans des documents fournis) | Toute référence vérifiée à la source ; leçon de la bibliographie vérifiée (EdA §12) |
+| Confusion d'espèces / de notions voisines | Charte (confusions à éviter), cas dédiés dans les jeux de référence |
+| Injection de prompt dans une page | Balises, consigne, détection, décision finale par le code |
+| Concurrence GPU avec Qwen3.8 | Scénarios A/B/C, plages horaires, attente sans échec |
+| Accès aux sources officielles (clés, conditions) | Connecteurs optionnels, documentés, désactivables |
+| Agent entraîné qui apprend par cœur | Thèmes tenus à l'écart, palier 2–3 seulement si mesuré utile |
+| OCR qui « réécrit » ou invente du texte plausible | Modèle OCR spécialisé à température basse, contrôles automatiques, second moteur sur échantillon, arbitrage visuel limité au visible, `[illisible]` plutôt qu'inventer (EdA §13) |
+| OCR correct au caractère près mais mauvais pour la recherche (ordre de lecture, tableaux) | Évaluation par la recherche (cas E), contrôle de l'ordre de lecture et des tableaux |
+| Livres volumineux qui saturent le GPU | Lecture en tâche de fond, page par page, reprise au point d'arrêt, priorité basse |
+| Droits d'auteur (livres, articles) | Usage personnel et local, `robots.txt`, source toujours citée, pas de redistribution |
 
 ---
 
 ## 12. Plan de réalisation
 
-12 sessions de développement + 1 session conditionnelle, détaillées dans `003_prompts_sessions/` :
+16 sessions (dont une conditionnelle), détaillées dans `003_prompts_sessions/` :
 
 | Jalon | Sessions | Résultat visible |
 |---|---|---|
-| **J1 — RAG local vérifié** | S01 → S06 | Vos fichiers déposés dans `inbox/` → vérifiés, découpés, enrichis, indexés ; `ragc search` fonctionne |
-| **J2 — Collecte web** | S07 | Le programme trouve et vérifie seul des sources sur le web |
-| **J3 — Connaissance structurée** | S08, S09 | Graphe d'entités, affirmations croisées, fiches sourcées |
-| **J4 — Autonomie** | S10 | Démon, cycles, analyse de couverture, rapports |
-| **J5 — Consommation et mesure** | S11, S12 | Outils MCP, proxy pour Qwen3.8, agent de recherche MiMo (par prompt), évaluation chiffrée, réglages calibrés |
-| **J6 — Agent MiMo spécialisé** *(si S12 le justifie)* | S13 | Adaptateur LoRA « agent de recherche » chargé dans `llama-server`, gain mesuré |
-
----
-
-## 13. Décisions à valider
-
-- [ ] SQLite + FTS5 + vecteurs exacts en v1 (LanceDB/Qdrant seulement si > ~300 000 extraits).
-- [ ] bge-m3 pour les embeddings, bge-reranker-v2-m3 pour le re-classement (Qwen3-Embedding-0.6B
-      comparé en S12).
-- [ ] Profils avec repli : Qwen3.8-27B pour les étapes rares et exigeantes quand il est chargé.
-- [ ] Formule de décision et seuils de E4 (calibrés ensuite sur le jeu de référence).
-- [ ] Outils MCP comme interface principale pour Qwen3.8, proxy OpenAI en second.
-- [ ] Ordre des sessions (J1 d'abord sur fichiers locaux, le web ensuite).
-- [ ] Agent de recherche MiMo : guidé par prompt d'abord, LoRA seulement si le critère du §6.4
-      est rempli.
+| **J1 — Base locale vérifiée, étiquetée, datée** | S01 → S07 | Vos fichiers, **y compris livres et PDF scannés** (S05), → lus, vérifiés, étiquetés, datés, indexés ; `ragc search` avec filtres |
+| **J2 — Un RAG qui raisonne** | S08 | `ragc ask --show-plan` : analyse, plan, dossier hiérarchisé, angle respecté (cas B et C) |
+| **J3 — Collecte web et sources officielles** | S09 | Collecte autonome par profil + collectes ciblées sur lacunes |
+| **J4 — Connaissance reliée et à jour** | S10 → S12 | Graphe typé, conflits qualifiés, veille d'actualisation, carte et fiches (cas A et D) |
+| **J5 — Autonomie** | S13 | Démon, cycles, couverture, veille et collectes planifiées |
+| **J6 — Consommation et mesure** | S14, S15 | Outils MCP, proxy pour Qwen3.8, navigation libre, évaluation et calibrage |
+| **J7 — MiMo spécialisé** *(si S15 le justifie)* | S16 | Agent MiMo entraîné, gain mesuré |
