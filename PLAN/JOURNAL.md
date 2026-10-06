@@ -100,3 +100,36 @@
   executer --domaine fiscalite_georgie --sujets methodologie_recherche/bancs/sujets_exemple.yaml`
   sur son PC, avec `RAGC_OPENALEX_CLE` et `RAGC_CONTACT` définis.
 
+
+## S00 (suite) — Décomposition transversale et deuxième lot de références — 2026-10-06
+
+- **Problème soulevé par l'utilisateur** : une LoRA entraînée sur d'excellents exemples ne donne
+  pas un « répertoire transversal » ; une question comme « comment convaincre quelqu'un
+  d'abandonner le véganisme ? » exige d'identifier, avant de chercher, les disciplines et les
+  questions sous-jacentes qu'elle mobilise.
+- **Décision** : séparer la **procédure** (apprise : prompts Q02, Q08, puis spécialiste
+  *planif*), le **répertoire** (externe, modifiable par l'utilisateur :
+  `methodologie_recherche/transversal/`) et les **ponts du corpus** (calculés sur les données,
+  modèle ABC de Swanson). Plan transversal en R3 : exploration par le répertoire, ponts,
+  K plans candidats, fusion par couverture des angles, critique de complétude (Q08), lacunes →
+  collecte ciblée (`002_strategie.md` §7.6).
+- **Fait** :
+  - `methodologie_recherche/transversal/` : grilles d'analyse (situation, présupposés et taux de
+    base, quatre questions de Tinbergen, niveaux d'explication, qui dit quoi à qui, leviers et
+    effets pervers, éthique, règle–faits–conclusion, analogues, contre-point), 32 disciplines,
+    9 problèmes généraux avec leurs domaines analogues ; scripts `charger_repertoire`,
+    `explorer_transversal`, `ponts_corpus`, `fusionner_plans` ; `outils_texte.py` partagé ;
+    tests (dont le cas du véganisme et un exemple de test personnel) ;
+  - plan : cas de référence **I** (véganisme), critères « couverture transversale » et
+    « étendue préservée » (`001` §9), §7.6 et porte d'étendue pour le spécialiste du plan
+    (`002` §8.3), sessions S09, S12, S14 ; carte : groupe « Répertoire transversal », étapes
+    `critique_completude` et `concepts_documents`, 91 scripts dont 16 réalisés, 0 problème ;
+  - deuxième lot de références de l'utilisateur vérifié (`000` §12) : **SyLeR** existe (2025,
+    prépublication) mais ses effets étaient exagérés ; **LegalGraphRAG** confirmé (ACL 2026) ;
+    **OntoRAG** existe mais « *What Does an Ontology Actually Do in RAG?* » est un billet de blog
+    et le chiffre « 80 % du bruit éliminé » est inventé.
+- **Retenu de ce lot** : dossier juridique en **règle → faits → conclusion** ; auditeur (R6)
+  armé d'une liste de contrôle d'applicabilité par profil, avec élagage en cascade ; ontologie
+  comme **points d'entrée multiples**, recherche à plat conservée ; couverture d'ensembles pour
+  le choix des preuves.
+- **Mesures** : aucune.

@@ -26,7 +26,7 @@ pilotage, spécialistes, généralisation, changement de modèle de base.
 2. **Contrôles déterministes d'abord** (versions, identifiants, articles, valeurs) ; **V02** pour
    la fidélité et la complétude, juge différent du constructeur si possible.
 3. **Scénarios d'évaluation** (`ragc eval run|compare`, à lancer sur vos PC) :
-   - cas A–H, qualité du plan, rappel, bonne version, fidélité, étiquetage, angle, abstention ;
+   - cas A–I, qualité du plan, rappel, bonne version, fidélité, étiquetage, angle, abstention ;
    - modes de réponse : RAG direct (MiMo / spécialistes), Qwen3.8 + adaptateur, Qwen3.8 seul,
      navigation libre ; durée, tokens, **rechargements** ;
    - **spécialistes** : chaque spécialiste contre l'enseignant ; **généralisation** sur le hacking ;
@@ -41,7 +41,7 @@ pilotage, spécialistes, généralisation, changement de modèle de base.
    (EdA §10, disponibilité en GGUF vérifiée).
 5. **Rapport** `reports/eval/<date>.md` + journal ; **proposition** de mise à jour des valeurs par
    défaut de `002` et des cibles de `001` §9, à valider par l'utilisateur.
-6. **Finitions** : README complet (installation Windows et Linux, premiers pas avec les cas A–H,
+6. **Finitions** : README complet (installation Windows et Linux, premiers pas avec les cas A–I,
    pilotage du travail en fond, réentraînement), `docs/` à jour.
 
 ## Critères d'acceptation

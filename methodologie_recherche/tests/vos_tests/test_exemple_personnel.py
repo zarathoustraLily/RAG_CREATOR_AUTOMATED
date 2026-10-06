@@ -32,3 +32,18 @@ def test_sante_cherche_des_essais_controles():
     requetes = generer_requetes_strategie(strategie, {"en": "specific phobia exposure therapy"},
                                           aujourd_hui=date(2026, 10, 6))
     assert any("randomized controlled trial" in r.texte for r in requetes)
+
+
+def test_ma_question_transversale_ouvre_les_bons_angles():
+    """Exemple : ce que VOUS attendez de la décomposition d'une de vos questions."""
+    from methodologie_recherche.transversal.exploration import explorer_transversal
+    from methodologie_recherche.transversal.repertoire import charger_repertoire
+
+    exploration = explorer_transversal("Comment convaincre quelqu'un d'abandonner le véganisme ?", charger_repertoire())
+    # Les quatre branches de départ : neurosciences, psychologie morale, éthologie/biologie, influence.
+    attendues = {"neurosciences_decision", "psychologie_morale", "ethologie", "biologie_evolutive",
+                 "sciences_communication"}
+    assert attendues <= set(exploration["disciplines_suggerees"])
+    # Les analogues doivent pousser vers des littératures voisines (déconversion, sectes…).
+    analogues = [a["domaine"] for s in exploration["schemas"] for a in s["analogues"]]
+    assert any("conversion" in a for a in analogues)

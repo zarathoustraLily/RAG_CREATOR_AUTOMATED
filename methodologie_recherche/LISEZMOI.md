@@ -24,6 +24,15 @@ methodologie_recherche/
 │   ├── wikipedia.py         Wikipédia (API officielle)
 │   ├── liste_lecture.py     liens de recherche que VOUS ouvrez (Brave Search, Scholar…)
 │   └── modele_collecteur.py gabarit pour écrire votre technique
+├── transversal/         le répertoire qui fait voir une question sous tous ses angles
+│   ├── lentilles.yaml       grilles d'analyse (présupposés, Tinbergen, niveaux, éthique…)
+│   ├── disciplines.yaml     disciplines, ce qu'elles apportent, leurs mots-clés
+│   ├── analogues.yaml       problèmes généraux et domaines qui les ont déjà étudiés
+│   ├── repertoire.py        charge et contrôle le répertoire
+│   ├── exploration.py       repère les angles d'une question et prépare le menu du plan
+│   ├── ponts.py             ponts entre littératures calculés sur votre corpus (modèle ABC)
+│   └── couverture.py        fusionne plusieurs plans et liste les angles manquants
+├── outils_texte.py      normalisation, mots-clés, ressemblance
 ├── bancs/
 │   ├── banc_collecte.py     mesure et comparaison
 │   └── sujets_exemple.yaml  sujets de test par domaine
@@ -86,6 +95,34 @@ retirer: {techniques: [wikipedia]}   # enlève un élément hérité
 - `angles_obligatoires` dit à l'agent ce que la recherche doit couvrir ; `criteres_tri` guide
   le tri des candidats ; `cadrage` rappelle la finalité (comprendre, prévenir, se soigner…).
 - Une faute de frappe dans une clé est signalée par les tests.
+
+## Le répertoire transversal
+
+Une question comme « comment convaincre quelqu'un d'abandonner le véganisme ? » n'appartient à
+aucun thème. Le répertoire fait apparaître ses angles **avant** la recherche :
+
+- les **grilles** (`lentilles.yaml`) : chacune pose des questions sous-jacentes (que se passe-t-il
+  déjà ? mécanisme, développement, fonction, évolution ? qui dit quoi à qui ? quels effets
+  pervers ? où est la limite éthique ?) ; certaines s'appliquent toujours, d'autres selon le
+  type de question ;
+- les **disciplines** (`disciplines.yaml`) : ce que chacune apporte ;
+- les **problèmes analogues** (`analogues.yaml`) : « faire changer quelqu'un d'une conviction qui
+  fonde son identité » renvoie à la déconversion, à la sortie des groupes à forte emprise, au
+  changement durable d'opinion… des littératures auxquelles on ne penserait pas.
+
+Le modèle reçoit ce menu, propose plusieurs plans, puis une critique vérifie que chaque grille
+est traitée ou écartée avec une raison. Une LoRA peut apprendre cette **procédure** ; le
+**répertoire**, lui, reste ici, et c'est vous qui l'enrichissez.
+
+Voir ce que le répertoire repère pour une question :
+```bash
+python -c "from methodologie_recherche.transversal.repertoire import charger_repertoire as c; \
+from methodologie_recherche.transversal.exploration import explorer_transversal as e, rendre_menu as m; \
+r = c(); print(m(e('Comment convaincre quelqu un d abandonner le véganisme ?', r), r))"
+```
+
+Ajoutez une discipline, une grille ou un problème analogue, puis lancez les tests : une
+incohérence (type inconnu, discipline absente, groupe d'indices vide) est signalée.
 
 ## Ajouter ou modifier une technique
 

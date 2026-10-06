@@ -9,10 +9,9 @@ Réglages (registre.yaml) :
 from __future__ import annotations
 
 import mimetypes
-import re
-import unicodedata
 from pathlib import Path
 
+from ..outils_texte import mots
 from .contrat import Candidat, CollecteurDeBase, Document, Politesse, Requete
 
 __manifeste__ = {
@@ -28,16 +27,6 @@ __manifeste__ = {
 EXTENSIONS = [".pdf", ".epub", ".txt", ".md", ".html", ".htm", ".docx", ".odt"]
 TEXTE_LISIBLE = {".txt", ".md", ".html", ".htm"}
 TAILLE_LUE = 200_000  # octets lus au début des fichiers texte pour chercher les mots
-MOTS_VIDES = {
-    "les", "des", "une", "dans", "pour", "par", "sur", "avec", "aux", "du", "de", "la", "le",
-    "the", "and", "for", "with", "from", "into", "of", "in", "on",
-}
-
-
-def mots(texte: str) -> set[str]:
-    """Mots significatifs, en minuscules et sans accents."""
-    sans_accents = unicodedata.normalize("NFKD", texte).encode("ascii", "ignore").decode()
-    return {m for m in re.split(r"[^a-z0-9]+", sans_accents.lower()) if len(m) > 2 and m not in MOTS_VIDES}
 
 
 class CollecteurDossierLocal(CollecteurDeBase):

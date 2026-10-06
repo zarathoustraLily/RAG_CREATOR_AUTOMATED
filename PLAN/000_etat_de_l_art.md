@@ -300,6 +300,36 @@ plusieurs mentions de la bibliographie d'origine étaient inexactes :
 - **Débat entre agents** (MADAM-RAG, plus ancien) : efficace sur les preuves contradictoires,
   mais coûteux en local. On en garde une version légère : le second avis.
 
+### Deuxième lot apporté par l'utilisateur (vérifié le 2026-10-06)
+
+Texte d'origine produit par un autre assistant (liens de citation non consultables). Chaque
+travail a été retrouvé à la source, puis contre-vérifié :
+
+| Référence | Date, statut | Ce qui était affirmé | Ce que dit la source |
+|---|---|---|---|
+| **SyLeR**, *An Explicit Syllogistic Legal Reasoning Framework for Large Language Models* (Zhang, Sun, Yu, Xu — Renmin) [arXiv:2504.04042](https://arxiv.org/abs/2504.04042) | avr.–mai 2025, prépublication ; **plus d'un an** | arbre hiérarchique de règles, majeure → mineure → conclusion ; « augmentation spectaculaire de la fidélité logique, disparition quasi totale des contradictions » | **Exagéré.** Arbre à deux niveaux (1 article de loi, puis 3 décisions rattachées) ; format majeure–mineure–conclusion appris par **LoRA** (SFT sur des chemins générés par GPT-4o, puis PPO) sur Qwen2-7B, avec **100 exemples d'entraînement** par jeu chinois. Gains modérés (ROUGE-1 33,70 → 36,01) ; aucune mesure de contradiction ; critère humain « Logic » 4,59 contre 4,26 (50 questions, 3 annotateurs). Testé aussi en français (droit belge, LLeQA) sans l'arbre |
+| **LegalGraphRAG**, *Multi-Agent Graph Retrieval-Augmented Generation for Reliable Legal Reasoning* (Chen et al., Xiamen University et PolyU) [arXiv:2605.28120](https://arxiv.org/abs/2605.28120) · [code](https://github.com/XMUDeepLIT/LegalGraphRAG) | mai 2026, **ACL 2026** | les graphes plats échouent sur les corpus hétérogènes ; trois agents Researcher, Auditor, Adjudicator | **Exact sur le dispositif, nuancé sur les effets.** Graphe hiérarchique (faits, règles, principes) ; l'Auditor vérifie que chaque article candidat s'applique aux faits avec une **liste de contrôle diagnostique** et **élague** les articles inapplicables avec les décisions qui en dépendent. +6,3 points face aux meilleurs concurrents (HippoRAG2, RAPTOR) avec Qwen3-8B ; sans l'Auditor −3,4 points ; sans le graphe hiérarchique −7,2. Droit pénal chinois seulement ; coût en ligne plus élevé |
+| **OntoRAG** (Tiwari, Lone, Pal — ABB) [arXiv:2506.00664](https://arxiv.org/abs/2506.00664) ; « *What Does an Ontology Actually Do in RAG?* » ; « hypergraphes sémantiques » | mai 2025 ; billet de blog du 25 sept. 2026 ; OG-RAG déc. 2024, EMNLP 2025 | question classée dans **un** nœud d'une ontologie, recherche restreinte aux sous-graphes ; « jusqu'à 80 % du bruit éliminé » | **Le chiffre de 80 % est inventé** ; « *What Does an Ontology…* » est un **billet de blog** (Florian June, Substack), pas un article. OntoRAG compare la question par similarité cosinus aux classes d'une ontologie **induite automatiquement** et retient **plusieurs** classes, puis leurs extraits ; évaluation par LLM-juge sur un seul corpus, chiffres du résumé incohérents avec le tableau. [OG-RAG](https://arxiv.org/abs/2412.15235) (Microsoft, EMNLP 2025) choisit des faits ancrés dans une ontologie par **couverture d'ensembles** : +55 % de rappel des faits, +40 % de réponses justes selon ses auteurs. Le billet conclut qu'une ontologie oriente l'entrée dans les preuves sans garantir la justesse, et qu'une hiérarchie obtenue par regroupement automatique n'est pas une hiérarchie validée |
+
+**Ce que nous en retenons :**
+
+- **Droit : règle, faits, conclusion.** Le dossier des questions juridiques est structuré en
+  majeure (textes en vigueur, conventions, décisions qui les appliquent), mineure (faits de la
+  situation qui déclenchent ou écartent chaque règle) et conclusion (conditions, risques). C'est
+  la grille « syllogisme » du répertoire transversal. Le format s'apprend avec peu d'exemples ;
+  la logique, elle, reste à contrôler.
+- **Un auditeur séparé, armé d'une liste de contrôle d'applicabilité.** Notre étape de
+  sélection des preuves (R6) joue ce rôle ; pour les profils juridiques, elle reçoit une liste
+  de contrôle (territoire, période, personnes visées, seuils, exceptions) et élague en cascade
+  les décisions rattachées à une règle écartée.
+- **L'ontologie comme point d'entrée multiple, pas comme filtre unique.** Notre répertoire de
+  disciplines et de grilles est une ontologie **rédigée et validée par vous** (pas induite par
+  regroupement) ; une question y est rattachée à **plusieurs** nœuds, et la recherche à plat
+  continue en parallèle pour ne pas perdre les angles imprévus.
+- **Couverture d'ensembles** (OG-RAG) : même idée que notre fusion des plans, qui retient
+  d'abord ce qui couvre des angles nouveaux ; elle peut aussi servir au choix des preuves du
+  dossier (couvrir chaque sous-question avec le moins d'extraits possible).
+
 ## 13. Lire les PDF scannés et les images (OCR)
 
 - **Classement des modèles OCR libres** (août 2026, synthèse de bancs d'essai publics) :

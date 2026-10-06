@@ -1,0 +1,103 @@
+# Grilles d'analyse (« lentilles ») appliquées à chaque question pour faire apparaître les
+# questions sous-jacentes. Une lentille « toujours: true » s'applique à toute question ;
+# les autres s'appliquent quand la question est d'un des « types » indiqués.
+# Modifiez, ajoutez, puis :  python -m pytest methodologie_recherche/tests
+
+# Détection des types de question : un type est retenu si l'un de ses mots-clés apparaît
+# (début de mot, sans accents : « convain » trouve « convaincre »).
+types:
+  persuasion: [convain, persuad, influenc, faire changer, faire accepter, faire adopter, negoci, vendre, manipul,
+               convince, persuad, negotiat]
+  comportement: [comportement, habitude, abandonner, arreter, quitter, renoncer, decision, choisir, addict,
+                 behavio, habit, quit]
+  croyance: [croyance, conviction, opinion, ideolog, religio, valeur, morale, ethique, vegan, vegetari,
+             belief, attitude]
+  sante: [sante, soin, traitement, therap, trauma, phobi, maladie, symptome, medicament, nutrition, regime,
+          health, treatment, therapy]
+  droit: [loi, legal, impot, fiscal, taxe, entreprise, creer une societe, contrat, juridi, tribunal,
+          jurisprudence, convention, law, tax, court]
+  securite: [pirat, hack, attaque, intrusion, hameconn, rancon, fraude, escroqu, arnaque, scam, phishing,
+             security, attack]
+  societe: [groupe, norme, culture, politique, social, communaute, community]
+
+lentilles:
+  - id: situation
+    nom: "Situation"
+    toujours: true
+    questions:
+      - "Qui sont les acteurs, et que veut vraiment chacun ?"
+      - "Qu'est-ce qui comptera comme une réussite, et à quel horizon ?"
+      - "Quelles contraintes : temps, relation, loi, santé, argent ?"
+
+  - id: presupposes
+    nom: "Présupposés et taux de base"
+    toujours: true
+    questions:
+      - "Que suppose la question ? Ces présupposés sont-ils vrais ?"
+      - "Que se passe-t-il déjà naturellement (taux de base) ? Qui l'a déjà fait, et pourquoi ?"
+      - "Quelles données directes existent sur exactement ce cas ?"
+
+  - id: tinbergen
+    nom: "Les quatre questions de Tinbergen"
+    types: [comportement, croyance, persuasion, sante]
+    questions:
+      - "Mécanisme : comment le comportement est-il produit maintenant (cerveau, cognition, émotions) ?"
+      - "Développement : comment s'est-il formé chez cette personne (histoire, apprentissages, entourage) ?"
+      - "Fonction : à quoi lui sert-il (bénéfices, identité, appartenance, sens) ?"
+      - "Évolution et histoire : d'où vient-il dans l'espèce et dans la culture ?"
+
+  - id: niveaux
+    nom: "Niveaux d'explication"
+    types: [comportement, croyance, persuasion, sante, societe]
+    niveaux: [biologique, neuronal, cognitif, émotionnel, identitaire, relationnel, "groupe et normes",
+              culturel, économique, "institutionnel et juridique", environnemental]
+    questions:
+      - "Que dit chaque niveau ? Lequel pèse le plus dans ce cas ?"
+
+  - id: communication
+    nom: "Qui dit quoi, à qui, comment"
+    types: [persuasion]
+    questions:
+      - "Source : qui parle, avec quelle crédibilité et quelle relation ?"
+      - "Message : quels arguments, quel cadrage selon les valeurs du destinataire ?"
+      - "Destinataire : quelles valeurs, quelle identité, quelle motivation ?"
+      - "Canal et moment : où, quand, en combien d'échanges ?"
+      - "Contexte social : qui l'entoure, qui le soutient ou le juge ?"
+
+  - id: leviers_obstacles
+    nom: "Leviers, obstacles, effets pervers"
+    types: [persuasion, comportement, croyance, sante]
+    questions:
+      - "Quels leviers ont des preuves d'efficacité ?"
+      - "Quelles résistances (réactance, identité menacée, perte de l'entourage) ?"
+      - "Quels effets pervers ou retours de bâton sont possibles ?"
+      - "Comment rendre le changement durable, et comment le mesurer ?"
+
+  - id: ethique
+    nom: "Éthique et limites"
+    types: [persuasion, sante, securite]
+    questions:
+      - "Où passe la limite entre persuasion respectueuse et manipulation ?"
+      - "Quels risques pour la personne (santé, autonomie) et pour la relation ?"
+
+  - id: syllogisme
+    nom: "Règle, faits, conclusion"
+    types: [droit]
+    questions:
+      - "Majeure : quelles règles s'appliquent (textes en vigueur, conventions, jurisprudence, doctrine) ?"
+      - "Mineure : quels faits de la situation déclenchent ou écartent chaque règle ?"
+      - "Conclusion : que s'ensuit-il, sous quelles conditions, avec quels risques de requalification ?"
+
+  - id: analogues
+    nom: "Problèmes de même structure"
+    toujours: true
+    questions:
+      - "À quel problème général cette question appartient-elle ?"
+      - "Quels autres domaines ont déjà étudié ce problème général, et avec quelles preuves ?"
+
+  - id: contre_point
+    nom: "Contre-point"
+    toujours: true
+    questions:
+      - "Quels sont les meilleurs arguments contraires ?"
+      - "Dans quelles conditions la réponse ou la stratégie échoue-t-elle ?"

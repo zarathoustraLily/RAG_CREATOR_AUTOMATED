@@ -31,6 +31,7 @@ groupes:
   - {id: index, nom: "Enrichissement et index", moment: construire}
   - {id: connaissance, nom: "Temps, graphe, carte", moment: construire}
   - {id: interfaces, nom: "Interfaces", moment: repondre}
+  - {id: transversal, nom: "Répertoire transversal (à vous)", moment: repondre}
   - {id: agent, nom: "Agent de recherche", moment: repondre}
   - {id: specialistes, nom: "Usine à spécialistes", moment: apprendre}
   - {id: evaluation, nom: "Évaluation", moment: evaluer}
@@ -70,7 +71,8 @@ parcours:
              label_chunks, digest_document, enrich_chunks, index_text, index_vectors]
   - id: question
     nom: "Vie d'une question"
-    etapes: [receive_question, analyse_situation, resolve_angle, plan_research, validate_plan,
+    etapes: [receive_question, analyse_situation, resolve_angle, charger_repertoire, explorer_transversal,
+             ponts_corpus, plan_research, fusionner_plans, critique_completude, validate_plan,
              first_move, search, deepen, select_evidence, rank_evidence, build_dossier,
              write_answer, log_question]
   - id: collecte
@@ -565,6 +567,14 @@ scripts:
     sorties: {graph: "graphe typé"}
     ecrit: [entities, relations]
     modele: {tache: entity_arbitration, prompt: C09}
+  - id: concepts_documents
+    fichier: ragcreator/graph/concepts.py
+    groupe: connaissance
+    ordre: 26
+    session: S14
+    role: "Associe à chaque document ses concepts (entités du graphe, étiquettes, sujets OpenAlex) pour calculer les ponts entre littératures."
+    entrees: {graph: "graphe typé", chunk_labels: "étiquettes"}
+    sorties: {concepts_par_document: "concepts de chaque document"}
   - id: qualify_conflicts
     fichier: ragcreator/graph/conflicts.py
     groupe: connaissance
@@ -625,7 +635,7 @@ scripts:
   - id: log_question
     fichier: ragcreator/research/questions.py
     groupe: interfaces
-    ordre: 40
+    ordre: 44
     session: S09
     role: "Journal de vos questions, de vos notes et corrections (exemples « or » pour l'agent)."
     entrees: {question: "question", answer: "réponse", user_rating: "votre note"}
@@ -653,16 +663,25 @@ scripts:
   - id: plan_research
     fichier: ragcreator/research/plan.py
     groupe: agent
-    ordre: 32
+    ordre: 34
     session: S09
-    role: "Bâtit le plan : sous-questions pondérées, thèmes lus sur la carte, filtres, contre-point."
-    entrees: {situation: "situation", angle: "angle", knowledge_map: "carte des thèmes"}
-    sorties: {research_plan: "plan de recherche"}
+    role: "Propose plusieurs plans (une grille mise en avant par plan) à partir du menu transversal : sous-questions typées, disciplines, grilles, thèmes, poids, contre-point."
+    entrees: {situation: "situation", angle: "angle", knowledge_map: "carte des thèmes", menu_transversal: "menu transversal", ponts: "ponts du corpus"}
+    sorties: {plans_candidats: "plans candidats"}
     modele: {tache: research_plan, prompt: Q02}
+  - id: critique_completude
+    fichier: ragcreator/research/critique.py
+    groupe: agent
+    ordre: 36
+    session: S09
+    role: "Critique de complétude : pour chaque grille ou discipline manquante, ajoute une sous-question ou justifie son absence ; ajoute les sous-questions « analogue »."
+    entrees: {plan_fusionne: "plan fusionné", angles_manquants: "angles manquants", situation: "situation"}
+    sorties: {research_plan: "plan de recherche complet"}
+    modele: {tache: completeness_critique, prompt: Q08}
   - id: validate_plan
     fichier: ragcreator/research/validate_plan.py
     groupe: agent
-    ordre: 33
+    ordre: 37
     session: S09
     role: "Vérifie le plan (thèmes, filtres, dépendances, budget) ; vous pouvez le corriger (--validate-plan)."
     entrees: {research_plan: "plan", domain_profiles: "profils"}
@@ -670,7 +689,7 @@ scripts:
   - id: first_move
     fichier: ragcreator/research/first_move.py
     groupe: agent
-    ordre: 34
+    ordre: 38
     session: S09
     role: "Premier coup : toutes les sous-questions en parallèle, re-classées chacune selon sa sous-question."
     entrees: {valid_plan: "plan", reference_date: "date de référence", ranked_chunks: "résultats de recherche"}
@@ -679,7 +698,7 @@ scripts:
   - id: search
     fichier: ragcreator/index/search.py
     groupe: agent
-    ordre: 34
+    ordre: 38
     session: S07
     role: "Moteur : BM25 + vecteurs → fusion → re-classement → diversité ; filtres d'étiquettes et de date."
     entrees: {query: "requête", filters: "filtres", reference_date: "date", rerank_query: "sous-question", fts_index: "index lexical", vector_index: "index vectoriel", rerank_scores: "scores du re-classement"}
@@ -688,7 +707,7 @@ scripts:
   - id: deepen
     fichier: ragcreator/research/deepen.py
     groupe: agent
-    ordre: 35
+    ordre: 39
     session: S09
     role: "Approfondit là où les preuves sont riches ; escalade extrait → section → document → graphe → fiches."
     entrees: {evidence_pool: "réserve de preuves", valid_plan: "plan", graph: "graphe", entity_cards: "fiches"}
@@ -697,7 +716,7 @@ scripts:
   - id: select_evidence
     fichier: ragcreator/research/select.py
     groupe: agent
-    ordre: 36
+    ordre: 40
     session: S09
     role: "Contrôle chaque preuve : fidélité, applicabilité, version en vigueur, source adaptée."
     entrees: {evidence_pool: "réserve", situation: "situation"}
@@ -706,7 +725,7 @@ scripts:
   - id: rank_evidence
     fichier: ragcreator/research/rank.py
     groupe: agent
-    ordre: 37
+    ordre: 41
     session: S09
     role: "Hiérarchise : importance = poids × solidité × applicabilité × fraîcheur × pertinence."
     entrees: {selected_evidence: "preuves", angle: "angle", chunk_labels: "étiquettes de solidité"}
@@ -714,7 +733,7 @@ scripts:
   - id: build_dossier
     fichier: ragcreator/research/dossier.py
     groupe: agent
-    ordre: 38
+    ordre: 42
     session: S09
     role: "Assemble le dossier de preuves classé, étiqueté, avec conflits et lacunes."
     entrees: {ranked_evidence: "preuves classées", conflicts: "conflits", valid_plan: "plan"}
@@ -724,7 +743,7 @@ scripts:
   - id: write_answer
     fichier: ragcreator/research/answer.py
     groupe: agent
-    ordre: 39
+    ordre: 43
     session: S09
     role: "Rédige la réponse à partir du dossier uniquement, avec citations et prudences."
     entrees: {dossier: "dossier", question: "question"}

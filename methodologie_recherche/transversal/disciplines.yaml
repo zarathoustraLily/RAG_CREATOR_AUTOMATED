@@ -1,0 +1,206 @@
+# Répertoire des disciplines : ce que chacune apporte et les mots qui la signalent.
+# « mots_cles » sert à repérer une discipline dans une question (début de mot, sans accents) ;
+# « mots_cles_en » sert à formuler les recherches en anglais.
+# Ajoutez les disciplines qui vous manquent : l'agent ne peut proposer que ce que ce répertoire,
+# votre corpus et le modèle connaissent.
+
+disciplines:
+  # ── Esprit et cerveau
+  - id: neurosciences_decision
+    nom: "Neurosciences de la décision et des valeurs"
+    famille: esprit_cerveau
+    apporte: "Comment le cerveau représente valeurs, récompenses et convictions ; imagerie cérébrale."
+    mots_cles: [cerveau, neuro, irmf, dopamin, recompense]
+    mots_cles_en: [decision neuroscience, neural representation of values, fMRI, reward]
+  - id: psychologie_sociale
+    nom: "Psychologie sociale"
+    famille: esprit_cerveau
+    apporte: "Influence, normes, identité sociale, changement d'attitude, dissonance."
+    mots_cles: [influenc, norme, attitude, dissonance, conformi, identite sociale]
+    mots_cles_en: [attitude change, social influence, social identity, cognitive dissonance]
+  - id: psychologie_morale
+    nom: "Psychologie morale"
+    famille: esprit_cerveau
+    apporte: "Comment se forment et résistent les convictions morales ; valeurs sacrées ; recadrage moral."
+    mots_cles: [moral, valeur, conviction, ethique, sacre]
+    mots_cles_en: [moral psychology, moral conviction, sacred values, moral reframing]
+  - id: psychologie_clinique
+    nom: "Psychologie clinique et psychothérapie"
+    famille: esprit_cerveau
+    apporte: "Traitements évalués, alliance thérapeutique, entretien motivationnel."
+    mots_cles: [therap, trauma, phobi, anxi, depress, clinique]
+    mots_cles_en: [psychotherapy, clinical trial, motivational interviewing, exposure therapy]
+  - id: psychologie_developpement
+    nom: "Psychologie du développement"
+    famille: esprit_cerveau
+    apporte: "Comment une préférence ou une croyance s'installe au fil de la vie."
+    mots_cles: [enfan, adolescen, developpement, apprentissage]
+    mots_cles_en: [developmental psychology, socialization, learning]
+  - id: sciences_decision
+    nom: "Économie comportementale et sciences de la décision"
+    famille: esprit_cerveau
+    apporte: "Biais, heuristiques, cadrage, aversion à la perte, nudges."
+    mots_cles: [biais, heuristi, cadrage, nudge, choix, decision]
+    mots_cles_en: [behavioral economics, framing effect, loss aversion, nudge]
+  - id: addictologie
+    nom: "Addictologie et psychologie de l'habitude"
+    famille: esprit_cerveau
+    apporte: "Formation et rupture des habitudes, rechutes, envies."
+    mots_cles: [habitude, addict, dependan, rechute, envie, sevrage]
+    mots_cles_en: [habit formation, relapse, craving, behavior change]
+
+  # ── Vivant
+  - id: ethologie
+    nom: "Éthologie"
+    famille: vivant
+    apporte: "Comportement animal et humain comparé ; fonctions et causes des comportements."
+    mots_cles: [etholog, animal, instinct, predat, vegan, carniv, omnivor]
+    mots_cles_en: [ethology, animal behavior, comparative behavior]
+  - id: biologie_evolutive
+    nom: "Biologie évolutive et anthropologie biologique"
+    famille: vivant
+    apporte: "Origine évolutive des comportements (alimentation, coopération, confiance)."
+    mots_cles: [evolution, darwin, ancestr, adaptati, vegan, viande, carniv, omnivor]
+    mots_cles_en: [evolutionary biology, human evolution, diet evolution]
+  - id: nutrition
+    nom: "Nutrition et sciences de l'alimentation"
+    famille: vivant
+    apporte: "Besoins nutritionnels, carences, effets des régimes sur la santé, goût."
+    mots_cles: [nutrition, aliment, regime, carence, vitamin, protein, vegan, vegetari, viande]
+    mots_cles_en: [nutrition, diet quality, nutrient deficiency, plant-based diet]
+  - id: mycologie
+    nom: "Mycologie"
+    famille: vivant
+    apporte: "Espèces de champignons, nomenclature, confusions."
+    mots_cles: [champignon, mycolog, amanit, bolet, cepe]
+    mots_cles_en: [mycology, mushroom identification, fungal taxonomy]
+  - id: toxicologie
+    nom: "Toxicologie"
+    famille: vivant
+    apporte: "Toxines, doses, symptômes, prise en charge des intoxications."
+    mots_cles: [toxi, poison, intoxic, dose]
+    mots_cles_en: [toxicology, poisoning, toxin]
+
+  # ── Santé
+  - id: medecine
+    nom: "Médecine clinique"
+    famille: sante
+    apporte: "Diagnostic, traitements, recommandations officielles."
+    mots_cles: [medec, maladie, diagnost, symptome, soin]
+    mots_cles_en: [clinical medicine, guideline, diagnosis]
+  - id: pharmacologie
+    nom: "Pharmacologie"
+    famille: sante
+    apporte: "Mécanismes d'action, interactions, effets indésirables des substances."
+    mots_cles: [medicament, pharmac, molecul, substance, posolog]
+    mots_cles_en: [pharmacology, drug interactions, adverse effects]
+  - id: sante_publique
+    nom: "Épidémiologie et santé publique"
+    famille: sante
+    apporte: "Fréquences, facteurs de risque, interventions à l'échelle des populations."
+    mots_cles: [epidemi, prevalence, population, prevention, sante publique]
+    mots_cles_en: [epidemiology, public health intervention, prevalence]
+
+  # ── Société
+  - id: sociologie
+    nom: "Sociologie"
+    famille: societe
+    apporte: "Groupes, identités collectives, mouvements, appartenance."
+    mots_cles: [sociolog, communaute, mouvement, groupe, appartenance]
+    mots_cles_en: [sociology, social movements, collective identity]
+  - id: anthropologie
+    nom: "Anthropologie culturelle"
+    famille: societe
+    apporte: "Pratiques, rites et significations selon les cultures (alimentation, échanges, confiance)."
+    mots_cles: [anthropolog, culture, rite, tradition]
+    mots_cles_en: [cultural anthropology, food culture, rituals]
+  - id: sciences_communication
+    nom: "Sciences de la communication et de la persuasion"
+    famille: societe
+    apporte: "Messages, sources, canaux ; effets mesurés des stratégies de persuasion."
+    mots_cles: [communication, persua, message, argument, convain, rhetori]
+    mots_cles_en: [persuasion, message framing, communication effects, deep canvassing]
+  - id: marketing_vente
+    nom: "Marketing et sciences de la vente"
+    famille: societe
+    apporte: "Comportement d'achat, négociation commerciale, confiance client."
+    mots_cles: [vente, vendre, achat, client, marketing, negoci, prix]
+    mots_cles_en: [consumer behavior, sales, negotiation]
+  - id: science_politique
+    nom: "Science politique"
+    famille: societe
+    apporte: "Changement d'opinion, polarisation, persuasion politique."
+    mots_cles: [politi, electi, opinion, polarisa]
+    mots_cles_en: [political persuasion, opinion change, polarization]
+  - id: criminologie
+    nom: "Criminologie et victimologie"
+    famille: societe
+    apporte: "Procédés des escrocs, profils des victimes, prévention."
+    mots_cles: [crimin, escroqu, arnaque, fraude, victim, manipul]
+    mots_cles_en: [fraud victimization, scam, criminology, social engineering]
+  - id: sciences_education
+    nom: "Sciences de l'éducation"
+    famille: societe
+    apporte: "Apprendre et désapprendre, esprit critique, éducation aux médias."
+    mots_cles: [educati, enseign, apprendre, pedagog]
+    mots_cles_en: [education, critical thinking, media literacy]
+
+  # ── Normes et argent
+  - id: droit_fiscal
+    nom: "Droit fiscal (national et international)"
+    famille: droit_economie
+    apporte: "Règles d'imposition, conventions, anti-abus, doctrine, jurisprudence."
+    mots_cles: [impot, fiscal, taxe, tva, convention fiscale]
+    mots_cles_en: [tax law, double tax treaty, controlled foreign company]
+  - id: droit_societes
+    nom: "Droit des sociétés et des affaires"
+    famille: droit_economie
+    apporte: "Formes de sociétés, siège, direction effective, obligations."
+    mots_cles: [societe, entreprise, siege, statut, associe]
+    mots_cles_en: [company law, corporate residence, place of effective management]
+  - id: droit_penal
+    nom: "Droit pénal"
+    famille: droit_economie
+    apporte: "Infractions, sanctions, procédure."
+    mots_cles: [penal, infraction, delit, sanction, plainte]
+    mots_cles_en: [criminal law, offence, prosecution]
+  - id: economie
+    nom: "Économie"
+    famille: droit_economie
+    apporte: "Incitations, coûts, marchés, asymétries d'information."
+    mots_cles: [econom, cout, prix, marche, incitati]
+    mots_cles_en: [economics, incentives, information asymmetry]
+
+  # ── Idées
+  - id: philosophie_morale
+    nom: "Philosophie morale"
+    famille: idees
+    apporte: "Arguments éthiques et leurs objections (statut des animaux, souffrance, autonomie)."
+    mots_cles: [philosoph, ethique, moral, souffrance, droit des animaux, vegan, specis, antispecis]
+    mots_cles_en: [moral philosophy, animal ethics, wild animal suffering]
+  - id: epistemologie
+    nom: "Épistémologie et pensée critique"
+    famille: idees
+    apporte: "Comment on justifie une croyance ; dialogue socratique ; révision des croyances."
+    mots_cles: [epistemolog, croyance, preuve, socrat, raisonnement]
+    mots_cles_en: [epistemology, belief revision, Socratic questioning]
+  - id: linguistique_pragmatique
+    nom: "Linguistique et pragmatique"
+    famille: idees
+    apporte: "Ce que les mots font : implicites, cadrage, politesse, actes de langage."
+    mots_cles: [langag, mot, discours, linguisti]
+    mots_cles_en: [pragmatics, discourse analysis, framing language]
+
+  # ── Techniques
+  - id: cybersecurite
+    nom: "Cybersécurité"
+    famille: techniques
+    apporte: "Attaques documentées, détection, protection ; ingénierie sociale."
+    mots_cles: [pirat, hack, cyber, intrusion, hameconn, rancon, phishing, malware]
+    mots_cles_en: [cybersecurity, social engineering, intrusion detection]
+  - id: informatique
+    nom: "Informatique et données"
+    famille: techniques
+    apporte: "Outils, algorithmes, traces numériques."
+    mots_cles: [informati, algorithm, logiciel, donnees, numerique]
+    mots_cles_en: [computer science, algorithms, data]

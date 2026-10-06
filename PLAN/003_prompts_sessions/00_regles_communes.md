@@ -5,7 +5,7 @@
 ## 1. Documents de référence
 
 - `PLAN/000_etat_de_l_art.md` (cité « EdA §n »), `PLAN/001_but.md` (le quoi, les **cas de
-  référence A–H**), `PLAN/002_strategie.md` (le comment), `PLAN/004_decisions_techniques.md`
+  référence A–I**), `PLAN/002_strategie.md` (le comment), `PLAN/004_decisions_techniques.md`
   (créé en S01), `PLAN/JOURNAL.md` (ce qui a été fait, décisions, écarts, mesures).
 - **Ne change jamais le but ni la stratégie en silence.** Propose, note dans « Écarts » du
   journal, et ne modifie `001` / `002` qu'avec l'accord de l'utilisateur.
@@ -91,7 +91,7 @@
 - Chaque fonctionnalité a ses tests. **Ne jamais désactiver, ignorer ou affaiblir un test** pour
   obtenir du vert.
 - Fixtures **rédigées pour le projet** et marquées fictives.
-- **Cas de référence A–H** (`tests/cas_reference/`) relancés par toute session qui touche à la
+- **Cas de référence A–I** (`tests/cas_reference/`) relancés par toute session qui touche à la
   recherche, à l'agent ou aux spécialistes. Le **hacking** est le **domaine tenu à l'écart** :
   aucun de ses exemples ne doit servir à l'entraînement.
 - Qualité : `ruff check .` et `ruff format --check .` propres.

@@ -16,7 +16,7 @@ le cloud** (sans GPU) ; les mesures réelles se font sur vos PC avec le banc de 
 | [S06](S06_verification_etiquetage.md) | Vérification et étiquetage, routine de validation | E4, E7 | C04–C06 | S05 | J1 |
 | [S07](S07_enrichissement_recherche.md) | Enrichissement, indexation, recherche hybride filtrée | E5, E8, E9 | C07, C08 | S06 | J1 |
 | [S08](S08_collecte_connecteurs.md) | Module **Méthodologie et technique de recherche** branché, collecte assistée, connecteurs prioritaires | E1, E2 | C02, C03 | S07 | J1 |
-| [S09](S09_agent_recherche.md) | **Agent de recherche**, modes sans rechargement, journal des questions, cas A–H | R1–R8 | Q01–Q04, Q06 | S08 | J2 |
+| [S09](S09_agent_recherche.md) | **Agent de recherche**, modes sans rechargement, journal des questions, cas A–I | R1–R8 | Q01–Q04, Q06 | S08 | J2 |
 | [S10](S10_interfaces_quotidien.md) | Interfaces du quotidien (proxy, MCP), phases complètes du travail en fond | — | Q07 | S09 | J3 |
 | [S11](S11_usine_specialistes.md) | **Usine à spécialistes**, réentraînement en une commande | P5 | — | S10 | J4 |
 | [S12](S12_specialistes_agent.md) | Spécialistes de l'agent, **adaptateur « recherche » sur Qwen3.8**, navigation libre | — | Q05 | S11 | J4 |

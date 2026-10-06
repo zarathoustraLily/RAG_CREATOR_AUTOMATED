@@ -35,7 +35,7 @@
    systématique (EdA §11).
 10. **Tout est vérifié, tracé, et devient un exemple** : JSON contraint, citations contrôlées,
    chaque appel journalisé avec son statut de validation.
-11. **On mesure** : huit cas de référence (A–H), le **journal de vos vraies questions**, des
+11. **On mesure** : neuf cas de référence (A–I), le **journal de vos vraies questions**, des
     jeux tenus à l'écart, un **domaine entier tenu à l'écart** de l'entraînement (le hacking),
     et `ragc bench` sur vos PC (le développement se fait dans le cloud, sans GPU).
 12. **Domaines prioritaires** : criminologie des escroqueries et fiscalité géorgienne ; puis
@@ -214,6 +214,8 @@ comportementale, vente), `pharmaco_medical`, `mycologie`, `generique`. Un profil
 | Actualisation | codes : mensuelle ; barèmes : à chaque loi de finances | publications : trimestrielle ; rétractations : mensuelle |
 | Filtre temporel | dur | souple |
 | Sources de référence | Légifrance, Judilibre, BOFiP, EUR-Lex, matsne.gov.ge (Code des impôts géorgien en anglais), rs.ge | Europe PMC, OpenAlex, Crossref (rétractations), vos livres |
+| Contrôle d'applicabilité (auditeur, R6) | territoire, période d'effet, personnes visées, seuils, exceptions et conventions qui dérogent ; une règle écartée entraîne l'élagage des décisions qui en dépendent (EdA §12, LegalGraphRAG) | population étudiée, contexte, taille d'effet, statut de réplication |
+| Forme du dossier | **règle → faits → conclusion** (majeure, mineure, conclusion ; EdA §12, SyLeR) | mécanisme → effet → action, niveau de preuve par maillon |
 
 | Élément | `criminologie` (escroqueries) | `sante_clinique` (traumatismes, phobies) | `cybersecurite` (hacking) |
 |---|---|---|---|
@@ -415,7 +417,7 @@ référence annoté couvrant les quatre profils ; revue humaine dont les décisi
 |---|---|---|---|
 | R1 | Situation | Q01 / *planif* | acteurs, objectif, juridictions, **date de référence**, ambiguïtés, hypothèses, angle détecté |
 | R2 | Angle | — | validation du plan > `--focus` > formulation > profil utilisateur > défaut |
-| R3 | Plan | Q02 / *planif* | sous-questions typées, thèmes (lus sur la carte), filtres, **poids**, dépendances, **contre-point**, budget |
+| R3 | Plan transversal (§7.6) | code + Q02 ×K + Q08 | exploration par le **répertoire** (grilles, disciplines, analogues), ponts du corpus, **plusieurs plans candidats** fusionnés, **critique de complétude** → sous-questions typées, disciplines, grilles, thèmes (lus sur la carte), filtres, **poids**, dépendances, **contre-point**, budget |
 | R4 | Premier coup | — | sous-questions en parallèle ; recherche avec la question entière + la sous-question, re-classement par sous-question (EdA §1, §11) |
 | R5 | Approfondissement | — | effort selon le rendement (EdA §12) ; escalade extrait → section → document → graphe → fiches ; 2 tours maximum |
 | R6 | Contrôles | Q03 / *selection* | fidélité, applicabilité, version en vigueur, adéquation de la source, conflits |
@@ -426,6 +428,9 @@ Ambiguïté forte : question posée (mode `demander`) ou hypothèse annoncée (m
 `--show-plan` / `--validate-plan` pour voir et corriger le plan.
 
 ### 7.2 Format du plan (exemple, cas A)
+
+Chaque sous-question porte aussi ses `disciplines` et ses `lentilles` (grilles) : c'est ce qui
+permet de mesurer la couverture transversale (§7.6).
 
 ```json
 {
@@ -454,15 +459,21 @@ Ambiguïté forte : question posée (mode `demander`) ou hypothèse annoncée (m
 
 ### 7.3 Contrôles, hiérarchisation, dossier
 
-- **Contrôles** : filtre temporel du profil ; fidélité de chaque preuve ; identifiants vérifiés
-  par le code ; adéquation de la source ; conflits qualifiés, jamais lissés.
+- **Contrôles** (R6, l'« auditeur ») : filtre temporel du profil ; fidélité de chaque preuve ;
+  identifiants vérifiés par le code ; adéquation de la source ; **liste de contrôle
+  d'applicabilité du profil** (en droit : territoire, période, personnes, seuils, exceptions),
+  avec élagage en cascade des décisions rattachées à une règle écartée ; conflits qualifiés,
+  jamais lissés. L'auditeur ne voit pas le raisonnement du planificateur, seulement les preuves
+  et la situation.
 - **Hiérarchisation** : `P` poids de la sous-question (ajusté par l'angle) · `S` solidité
   (échelle du profil, réplication, crédibilité) · `A` applicabilité à la situation · `F`
   fraîcheur (0 si non en vigueur sous filtre dur) · `R` pertinence du re-classement ; poids
   réglables, calibrés en S16.
 - **Dossier** : par sous-question, preuves `[S#]` avec étiquettes (nature, solidité, juridiction,
   version, **page**), conflits, contre-point, **lacunes** ; Markdown compact et JSON ; budget
-  par modèle.
+  par modèle. Le choix des preuves suit une **couverture d'ensembles** : couvrir chaque
+  sous-question et chaque grille avec le moins d'extraits possible (EdA §12, OG-RAG). En droit, le
+  dossier prend la forme **règle → faits → conclusion**.
 
 ### 7.4 Angle et profil utilisateur
 
@@ -482,6 +493,53 @@ thèmes privilégiés fournissent plus d'exemples).
   correction éventuelle (`ragc rate`, ou dans le proxy) en font des **exemples or** pour les
   spécialistes de l'agent.
 
+### 7.6 Décomposition transversale : la procédure s'apprend, le répertoire reste dehors
+
+**Le problème.** Une question comme « comment convaincre quelqu'un d'abandonner le véganisme ? »
+n'appartient à aucun thème : il faut savoir, avant même de chercher, qu'elle mobilise les
+neurosciences des valeurs, la psychologie morale et sociale, la persuasion, la nutrition,
+l'éthologie, la philosophie morale… Un modèle seul propose les angles qui lui viennent
+spontanément ; un adaptateur LoRA entraîné sur de bons exemples apprend une **manière** de
+décomposer, mais **n'ajoute pas d'étendue** et peut même la réduire (EdA §17).
+
+**Le principe.** On sépare trois choses :
+
+| Quoi | Où ça vit | Qui le fait évoluer |
+|---|---|---|
+| **Procédure** : comment décomposer, appliquer une grille, formuler, fusionner | prompts Q02, Q08, puis spécialiste *planif* | l'entraînement (§8) |
+| **Répertoire** : grilles d'analyse, disciplines, problèmes analogues | `methodologie_recherche/transversal/*.yaml` | **vous** (modifiable, testé) |
+| **Ponts du corpus** : concepts qui relient la question à son but dans vos documents | calculés sur l'index (modèle ABC) | le corpus, à chaque construction |
+
+**Les étapes de R3.**
+
+1. **Exploration** (`explorer_transversal`, code) : types de la question, **problème général**
+   (« faire changer quelqu'un d'une conviction qui fonde son identité ») et ses **domaines
+   analogues** (déconversion, sortie des groupes à forte emprise, changement durable d'opinion,
+   entretien motivationnel), **grilles** à appliquer (situation, présupposés et taux de base,
+   quatre questions de Tinbergen, niveaux d'explication, qui dit quoi à qui, leviers et effets
+   pervers, éthique, règle–faits–conclusion en droit, analogues, contre-point), disciplines
+   repérées et **familles absentes**. Résultat : un **menu** injecté dans Q02.
+2. **Ponts** (`ponts_corpus`, code, après S14) : concepts B fréquemment associés à la question A
+   dans certains documents et au but C dans d'autres (modèle ABC de Swanson), et voisins venus
+   d'une famille de disciplines absente du plan. Ce sont des **pistes** issues des données, pas
+   de l'intuition du modèle.
+3. **Plans candidats** (Q02 ×K, K = 3 par défaut) : chaque appel met en avant une grille
+   différente ; la diversité vient de la procédure, pas du hasard.
+4. **Fusion** (`fusionner_plans`, code) : doublons fusionnés, sous-questions qui ajoutent des
+   angles nouveaux retenues en premier, plafond de sous-questions, liste des angles manquants.
+5. **Critique de complétude** (Q08, une passe) : chaque grille ou discipline manquante devient
+   une sous-question **ou** reçoit une raison écrite ; ajout de sous-questions « analogue ».
+6. **Collecte** : une branche sans preuve dans le corpus devient une **lacune** et une collecte
+   ciblée en fond (§6) ; la réponse le signale au lieu d'improviser.
+
+**Coût** : quelques appels de plus au moment du plan (K plans + une critique), le reste est du
+code. Avec Qwen3.8 chargé (mode §3.3), compter quelques secondes ; le budget se règle.
+
+**Votre exemple, complété.** Les quatre branches proposées (neurosciences, psychologie morale,
+éthologie et biologie, influence) restent ; le répertoire y ajoute les présupposés (taux et
+raisons d'abandon déjà observés), la nutrition, la sociologie de l'appartenance, les domaines
+analogues, les effets pervers (réactance) et l'éthique. C'est le cas de référence **I**.
+
 ---
 
 ## 8. Apprendre : l'usine à spécialistes
@@ -497,7 +555,7 @@ Priorité = **volume** × **facilité à vérifier** × **gain de vitesse**.
 | 3 | Enrichissement (contexte, questions, entités, relations) | C08 | 2B–4B | relations retrouvées dans le texte, accord enseignant ; EdA §14 (extraction de relations) |
 | 4 | Vérification documentaire | C04 | 4B | vos décisions, second avis |
 | 5 | Sélection des preuves et fidélité | Q03 | 4B | extraits attendus, contrôle de fidélité |
-| 6 | Situation et plan | Q01–Q02 | 4B–9B | sous-questions attendues des cas, vos notes ; supervision **avec raisonnement** (EdA §14) ; renforcement ensuite |
+| 6 | Situation et plan | Q01–Q02, Q08 | 4B–9B | sous-questions attendues des cas, vos notes ; supervision **avec raisonnement** (EdA §14) ; le spécialiste apprend la **procédure** (lire le menu, appliquer les grilles, fusionner) ; le répertoire reste externe (§7.6) ; renforcement ensuite |
 | 7 | Dossier et rédaction | Q04, Q06 | 4B–9B | citations valides, vos notes |
 | option | Adaptateur « recherche » sur Qwen3.8 | Q01–Q04 | Qwen3.8-27B | idem 5–7 ; si l'entraînement est faisable (§3.4) |
 
@@ -536,9 +594,13 @@ L'OCR n'est pas entraîné : on utilise un outil ou un modèle déjà spécialis
 - **Porte de promotion** : sur le test tenu à l'écart, le candidat doit égaler l'enseignant à une
   tolérance près sur la métrique de sa tâche **et** être plus rapide ; sinon il reste candidat.
   Un spécialiste promu est **rétrogradé** automatiquement si vos corrections montrent une baisse.
+  Pour le spécialiste du plan, la porte inclut l'**étendue** : il ne doit pas proposer moins
+  d'angles (grilles, disciplines, analogues) que le modèle de base guidé par le répertoire, sur
+  des questions transversales tenues à l'écart (§7.6, EdA §17).
 - **Renforcement** (planification, sélection) : après le premier entraînement supervisé, GRPO
-  avec récompense vérifiable composée (couverture des sous-questions attendues, bonne version,
-  extraits attendus, fidélité, coût en tokens), formes de récompense comparées (EdA §7).
+  avec récompense vérifiable composée (couverture des sous-questions attendues, couverture des
+  angles, bonne version, extraits attendus, fidélité, coût en tokens), formes de récompense
+  comparées (EdA §7) ; la diversité des plans est surveillée (EdA §17).
 - **Boucle continue** : réentraînement quand assez de nouveaux exemples or et argent se sont
   accumulés.
 
@@ -586,7 +648,7 @@ courte** pour le spécialiste qui le remplace.
 |---|---|---|
 | Lecture | L01 `ocr_page` · L02 `figure_description` · L03 `ocr_arbitration` | OCR (modèle ou outil) ; description de figures et arbitrage visuel (MiMo) |
 | Construction | C01 `theme_charter` · C02 `search_queries` · C03 `search_triage` · C04 `doc_verification` · C05 `doc_second_opinion` · C06 `passage_verification` · C07 `doc_digest` · C08 `chunk_enrichment` · C09 `entity_arbitration` · C10 `conflict_qualification` · C11 `entity_card` · C12 `node_card` · C13 `coverage_analysis` · C14 `update_check` | voir §6 |
-| Réponse | Q01 `situation_analysis` · Q02 `research_plan` · Q03 `evidence_selection` · Q04 `evidence_dossier` · Q05 `research_agent_tools` · Q06 `consumer_answer` · Q07 `consumer_agent` | voir §7 |
+| Réponse | Q01 `situation_analysis` · Q02 `research_plan` · Q03 `evidence_selection` · Q04 `evidence_dossier` · Q05 `research_agent_tools` · Q06 `consumer_answer` · Q07 `consumer_agent` · Q08 `completeness_critique` | voir §7 |
 | Évaluation | V01 `eval_questions` · V02 `eval_judge` | jeu d'évaluation ; juge (contrôles déterministes d'abord) |
 
 ---
@@ -597,7 +659,7 @@ courte** pour le spécialiste qui le remplace.
   fictives) ; **en conditions réelles sur vos PC** via `ragc bench` et `pytest --live`, rapports
   transmis et notés dans le journal.
 - Tests **Windows et Linux** (intégration continue sur les deux systèmes si possible).
-- **Cas de référence A–H** ; **journal de vos vraies questions** (objectif : 50 questions notées) ;
+- **Cas de référence A–I** ; **journal de vos vraies questions** (objectif : 50 questions notées) ;
   jeux de référence (vérification, étiquetage, entités, pages OCR) ; **tests tenus à l'écart par
   spécialiste**.
 - Contrôles **déterministes** d'abord (versions, identifiants, articles, valeurs), juge LLM

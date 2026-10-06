@@ -1,0 +1,115 @@
+# Problèmes généraux (« schémas ») et domaines qui les ont déjà étudiés.
+# Une question est rattachée à un schéma si CHAQUE groupe de « indices » a au moins un mot présent.
+# Les « analogues » orientent la recherche vers des littératures qu'on n'aurait pas pensé à
+# consulter : c'est là que se trouvent souvent les preuves les plus solides.
+
+schemas:
+  - id: changer_conviction_identitaire
+    nom: "Faire changer quelqu'un d'une conviction qui fonde son identité"
+    indices:
+      - [convain, persuad, faire changer, faire abandonner, abandonner, quitter, renoncer, faire evoluer, convince, persuade]
+      - [vegan, vegetari, religio, croyance, conviction, opinion, ideolog, secte, regime, valeur, belief]
+    types: [persuasion, croyance, comportement]
+    disciplines: [psychologie_morale, psychologie_sociale, neurosciences_decision, sciences_communication,
+                  epistemologie, sociologie, psychologie_clinique]
+    analogues:
+      - {domaine: "Déconversion religieuse", recherche_en: "religious deconversion process"}
+      - {domaine: "Sortie des groupes à forte emprise", recherche_en: "leaving high-demand groups cult exit"}
+      - {domaine: "Changement durable d'opinion par conversation non jugeante", recherche_en: "deep canvassing durable attitude change"}
+      - {domaine: "Hésitation vaccinale et entretien motivationnel", recherche_en: "motivational interviewing vaccine hesitancy"}
+      - {domaine: "Abandon d'un régime alimentaire choisi", recherche_en: "lapsed vegetarians vegans reasons"}
+      - {domaine: "Désengagement de l'extrémisme", recherche_en: "disengagement deradicalization process"}
+
+  - id: arreter_habitude
+    nom: "Arrêter un comportement installé"
+    indices:
+      - [arreter, abandonner, quitter, decrocher, sevrer, reduire, quit, stop]
+      - [habitude, tabac, fumer, alcool, jeu, ecran, addict, consommation, habit, smoking]
+    types: [comportement, sante]
+    disciplines: [addictologie, sciences_decision, neurosciences_decision, sante_publique]
+    analogues:
+      - {domaine: "Arrêt du tabac", recherche_en: "smoking cessation intervention meta-analysis"}
+      - {domaine: "Formation et rupture des habitudes", recherche_en: "habit formation disruption"}
+      - {domaine: "Prévention de la rechute", recherche_en: "relapse prevention"}
+
+  - id: gagner_confiance
+    nom: "Gagner la confiance de quelqu'un pour obtenir une décision"
+    indices:
+      - [confiance, convain, vendre, negoci, seduire, persuad, trust, sell]
+      - [client, acheteur, vendeur, inconnu, victime, partenaire, interlocuteur, buyer, seller]
+    types: [persuasion, comportement]
+    disciplines: [marketing_vente, psychologie_sociale, sciences_decision, criminologie, neurosciences_decision]
+    analogues:
+      - {domaine: "Négociation commerciale", recherche_en: "negotiation trust building experiment"}
+      - {domaine: "Escroqueries et victimologie (pour s'en protéger)", recherche_en: "fraud victimization trust exploitation"}
+      - {domaine: "Alliance thérapeutique", recherche_en: "therapeutic alliance outcome"}
+      - {domaine: "Asymétrie d'information entre experts et profanes", recherche_en: "information asymmetry expert buyer"}
+
+  - id: decision_sous_pression
+    nom: "Obtenir ou subir une décision rapide sous pression"
+    indices:
+      - [urgen, presse, pression, rarete, vite, immediat, urgency, scarcity]
+    types: [persuasion, securite]
+    disciplines: [sciences_decision, criminologie, psychologie_sociale, cybersecurite]
+    analogues:
+      - {domaine: "Escroqueries par urgence", recherche_en: "scam urgency pressure tactics"}
+      - {domaine: "Hameçonnage", recherche_en: "phishing urgency cues susceptibility"}
+      - {domaine: "Marketing de la rareté", recherche_en: "scarcity effect consumer decision"}
+
+  - id: resister_influence
+    nom: "Se protéger d'une manipulation"
+    indices:
+      - [proteger, resister, detecter, prevenir, eviter, reconnaitre, protect, resist, detect, prevent]
+      - [manipul, escroqu, arnaque, fraude, influence, propagand, desinform, hameconn, scam, phishing]
+    types: [securite, persuasion]
+    disciplines: [criminologie, psychologie_sociale, sciences_education, cybersecurite]
+    analogues:
+      - {domaine: "Inoculation psychologique (prebunking)", recherche_en: "psychological inoculation prebunking"}
+      - {domaine: "Éducation aux médias", recherche_en: "media literacy intervention"}
+      - {domaine: "Formation anti-hameçonnage", recherche_en: "phishing training effectiveness"}
+
+  - id: arbitrer_juridictions
+    nom: "Choisir entre plusieurs systèmes de règles (pays, régimes)"
+    indices:
+      - [pays, etranger, international, georgi, expatri, residen, convention, country, foreign]
+      - [impot, fiscal, taxe, societe, entreprise, droit, loi, tax, law]
+    types: [droit]
+    disciplines: [droit_fiscal, droit_societes, economie]
+    analogues:
+      - {domaine: "Résidence fiscale des nomades numériques", recherche_en: "digital nomad tax residence"}
+      - {domaine: "Successions internationales", recherche_en: "cross-border inheritance conflict of laws"}
+      - {domaine: "Règles anti-abus et substance économique", recherche_en: "economic substance requirements anti-avoidance"}
+
+  - id: surmonter_peur
+    nom: "Faire disparaître une peur apprise"
+    indices:
+      - [peur, phobi, trauma, angoisse, anxi, panique, fear, phobia, anxiety]
+    types: [sante, comportement]
+    disciplines: [psychologie_clinique, neurosciences_decision, ethologie, medecine]
+    analogues:
+      - {domaine: "Extinction de la peur (recherche animale)", recherche_en: "fear extinction learning"}
+      - {domaine: "Désensibilisation des animaux en éthologie appliquée", recherche_en: "desensitization counterconditioning animal behavior"}
+      - {domaine: "Anxiété de performance", recherche_en: "performance anxiety intervention"}
+
+  - id: detecter_tromperie
+    nom: "Détecter une tromperie"
+    indices:
+      - [detecter, reperer, reconnaitre, identifier, verifier, detect, spot]
+      - [mensonge, fraude, escroqu, arnaque, faux, tromp, manipul, lie, fraud, scam, deception]
+    types: [securite]
+    disciplines: [criminologie, psychologie_sociale, cybersecurite, informatique]
+    analogues:
+      - {domaine: "Détection du mensonge", recherche_en: "deception detection accuracy meta-analysis"}
+      - {domaine: "Détection de la fraude financière", recherche_en: "financial fraud detection"}
+      - {domaine: "Détection d'intrusion", recherche_en: "intrusion detection"}
+
+  - id: identifier_confusion
+    nom: "Identifier sans confondre avec un sosie dangereux"
+    indices:
+      - [identifi, reconnaitre, distinguer, confond, confusion]
+      - [champignon, plante, espece, amanit, baie, mushroom, plant, species]
+    types: [sante]
+    disciplines: [mycologie, toxicologie, medecine]
+    analogues:
+      - {domaine: "Plantes toxiques et leurs sosies comestibles", recherche_en: "toxic plant misidentification poisoning"}
+      - {domaine: "Diagnostic différentiel", recherche_en: "differential diagnosis errors"}

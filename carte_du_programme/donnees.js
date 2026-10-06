@@ -81,6 +81,11 @@ window.CARTE = {
    "moment": "repondre"
   },
   {
+   "id": "transversal",
+   "nom": "Répertoire transversal (à vous)",
+   "moment": "repondre"
+  },
+  {
    "id": "agent",
    "nom": "Agent de recherche",
    "moment": "repondre"
@@ -153,7 +158,12 @@ window.CARTE = {
     "receive_question",
     "analyse_situation",
     "resolve_angle",
+    "charger_repertoire",
+    "explorer_transversal",
+    "ponts_corpus",
     "plan_research",
+    "fusionner_plans",
+    "critique_completude",
     "validate_plan",
     "first_move",
     "search",
@@ -510,6 +520,17 @@ window.CARTE = {
    "sorties": {},
    "id": "contrat_collecteur",
    "fichier": "methodologie_recherche/collecteurs/contrat.py",
+   "statut": "realise"
+  },
+  {
+   "role": "Normalise les textes (minuscules, sans accents), extrait les mots, repère les mots-clés, mesure la ressemblance.",
+   "groupe": "methodo",
+   "ordre": 8,
+   "session": "S08",
+   "entrees": {},
+   "sorties": {},
+   "id": "outils_texte",
+   "fichier": "methodologie_recherche/outils_texte.py",
    "statut": "realise"
   },
   {
@@ -1231,6 +1252,22 @@ window.CARTE = {
    "statut": "prevu"
   },
   {
+   "id": "concepts_documents",
+   "fichier": "ragcreator/graph/concepts.py",
+   "groupe": "connaissance",
+   "ordre": 26,
+   "session": "S14",
+   "role": "Associe à chaque document ses concepts (entités du graphe, étiquettes, sujets OpenAlex) pour calculer les ponts entre littératures.",
+   "entrees": {
+    "graph": "graphe typé",
+    "chunk_labels": "étiquettes"
+   },
+   "sorties": {
+    "concepts_par_document": "concepts de chaque document"
+   },
+   "statut": "prevu"
+  },
+  {
    "id": "qualify_conflicts",
    "fichier": "ragcreator/graph/conflicts.py",
    "groupe": "connaissance",
@@ -1378,6 +1415,22 @@ window.CARTE = {
    "statut": "prevu"
   },
   {
+   "role": "Charge le répertoire transversal (grilles d'analyse, disciplines, problèmes analogues) et vérifie sa cohérence.",
+   "groupe": "transversal",
+   "ordre": 30,
+   "session": "S09",
+   "entrees": {},
+   "sorties": {
+    "repertoire_transversal": "grilles, disciplines et analogues"
+   },
+   "lit": [
+    "methodologie_recherche/transversal/*.yaml"
+   ],
+   "id": "charger_repertoire",
+   "fichier": "methodologie_recherche/transversal/repertoire.py",
+   "statut": "realise"
+  },
+  {
    "id": "resolve_angle",
    "fichier": "ragcreator/research/angle.py",
    "groupe": "agent",
@@ -1395,19 +1448,55 @@ window.CARTE = {
    "statut": "prevu"
   },
   {
+   "role": "Repère le type de question, le problème général et ses analogues, les grilles à appliquer et les disciplines concernées ; prépare le menu du plan.",
+   "groupe": "transversal",
+   "ordre": 32,
+   "session": "S09",
+   "entrees": {
+    "question": "question",
+    "situation": "situation (Q01)",
+    "repertoire_transversal": "répertoire"
+   },
+   "sorties": {
+    "exploration_transversale": "angles repérés",
+    "menu_transversal": "menu injecté dans le prompt du plan"
+   },
+   "id": "explorer_transversal",
+   "fichier": "methodologie_recherche/transversal/exploration.py",
+   "statut": "realise"
+  },
+  {
+   "role": "Calcule sur le corpus les concepts qui relient la question à son but (modèle ABC) et les voisins venus d'autres familles de disciplines.",
+   "groupe": "transversal",
+   "ordre": 33,
+   "session": "S14",
+   "entrees": {
+    "exploration_transversale": "angles repérés",
+    "concepts_par_document": "concepts de chaque document (index)"
+   },
+   "sorties": {
+    "ponts": "concepts-ponts et voisins transversaux"
+   },
+   "id": "ponts_corpus",
+   "fichier": "methodologie_recherche/transversal/ponts.py",
+   "statut": "realise"
+  },
+  {
    "id": "plan_research",
    "fichier": "ragcreator/research/plan.py",
    "groupe": "agent",
-   "ordre": 32,
+   "ordre": 34,
    "session": "S09",
-   "role": "Bâtit le plan : sous-questions pondérées, thèmes lus sur la carte, filtres, contre-point.",
+   "role": "Propose plusieurs plans (une grille mise en avant par plan) à partir du menu transversal : sous-questions typées, disciplines, grilles, thèmes, poids, contre-point.",
    "entrees": {
     "situation": "situation",
     "angle": "angle",
-    "knowledge_map": "carte des thèmes"
+    "knowledge_map": "carte des thèmes",
+    "menu_transversal": "menu transversal",
+    "ponts": "ponts du corpus"
    },
    "sorties": {
-    "research_plan": "plan de recherche"
+    "plans_candidats": "plans candidats"
    },
    "modele": {
     "tache": "research_plan",
@@ -1416,10 +1505,48 @@ window.CARTE = {
    "statut": "prevu"
   },
   {
+   "role": "Fusionne les plans candidats sans doublon, privilégie les sous-questions qui ajoutent des angles, liste les angles manquants.",
+   "groupe": "transversal",
+   "ordre": 35,
+   "session": "S09",
+   "entrees": {
+    "plans_candidats": "plans proposés par le modèle",
+    "exploration_transversale": "angles repérés"
+   },
+   "sorties": {
+    "plan_fusionne": "plan fusionné",
+    "angles_manquants": "grilles et disciplines non couvertes"
+   },
+   "id": "fusionner_plans",
+   "fichier": "methodologie_recherche/transversal/couverture.py",
+   "statut": "realise"
+  },
+  {
+   "id": "critique_completude",
+   "fichier": "ragcreator/research/critique.py",
+   "groupe": "agent",
+   "ordre": 36,
+   "session": "S09",
+   "role": "Critique de complétude : pour chaque grille ou discipline manquante, ajoute une sous-question ou justifie son absence ; ajoute les sous-questions « analogue ».",
+   "entrees": {
+    "plan_fusionne": "plan fusionné",
+    "angles_manquants": "angles manquants",
+    "situation": "situation"
+   },
+   "sorties": {
+    "research_plan": "plan de recherche complet"
+   },
+   "modele": {
+    "tache": "completeness_critique",
+    "prompt": "Q08"
+   },
+   "statut": "prevu"
+  },
+  {
    "id": "validate_plan",
    "fichier": "ragcreator/research/validate_plan.py",
    "groupe": "agent",
-   "ordre": 33,
+   "ordre": 37,
    "session": "S09",
    "role": "Vérifie le plan (thèmes, filtres, dépendances, budget) ; vous pouvez le corriger (--validate-plan).",
    "entrees": {
@@ -1435,7 +1562,7 @@ window.CARTE = {
    "id": "first_move",
    "fichier": "ragcreator/research/first_move.py",
    "groupe": "agent",
-   "ordre": 34,
+   "ordre": 38,
    "session": "S09",
    "role": "Premier coup : toutes les sous-questions en parallèle, re-classées chacune selon sa sous-question.",
    "entrees": {
@@ -1458,7 +1585,7 @@ window.CARTE = {
    "id": "search",
    "fichier": "ragcreator/index/search.py",
    "groupe": "agent",
-   "ordre": 34,
+   "ordre": 38,
    "session": "S07",
    "role": "Moteur : BM25 + vecteurs → fusion → re-classement → diversité ; filtres d'étiquettes et de date.",
    "entrees": {
@@ -1484,7 +1611,7 @@ window.CARTE = {
    "id": "deepen",
    "fichier": "ragcreator/research/deepen.py",
    "groupe": "agent",
-   "ordre": 35,
+   "ordre": 39,
    "session": "S09",
    "role": "Approfondit là où les preuves sont riches ; escalade extrait → section → document → graphe → fiches.",
    "entrees": {
@@ -1505,7 +1632,7 @@ window.CARTE = {
    "id": "select_evidence",
    "fichier": "ragcreator/research/select.py",
    "groupe": "agent",
-   "ordre": 36,
+   "ordre": 40,
    "session": "S09",
    "role": "Contrôle chaque preuve : fidélité, applicabilité, version en vigueur, source adaptée.",
    "entrees": {
@@ -1525,7 +1652,7 @@ window.CARTE = {
    "id": "rank_evidence",
    "fichier": "ragcreator/research/rank.py",
    "groupe": "agent",
-   "ordre": 37,
+   "ordre": 41,
    "session": "S09",
    "role": "Hiérarchise : importance = poids × solidité × applicabilité × fraîcheur × pertinence.",
    "entrees": {
@@ -1536,73 +1663,6 @@ window.CARTE = {
    "sorties": {
     "ranked_evidence": "preuves classées"
    },
-   "statut": "prevu"
-  },
-  {
-   "id": "build_dossier",
-   "fichier": "ragcreator/research/dossier.py",
-   "groupe": "agent",
-   "ordre": 38,
-   "session": "S09",
-   "role": "Assemble le dossier de preuves classé, étiqueté, avec conflits et lacunes.",
-   "entrees": {
-    "ranked_evidence": "preuves classées",
-    "conflicts": "conflits",
-    "valid_plan": "plan"
-   },
-   "sorties": {
-    "dossier": "dossier de preuves",
-    "research_gaps": "lacunes"
-   },
-   "ecrit": [
-    "research_runs",
-    "gaps"
-   ],
-   "modele": {
-    "tache": "evidence_dossier",
-    "prompt": "Q04"
-   },
-   "statut": "prevu"
-  },
-  {
-   "id": "write_answer",
-   "fichier": "ragcreator/research/answer.py",
-   "groupe": "agent",
-   "ordre": 39,
-   "session": "S09",
-   "role": "Rédige la réponse à partir du dossier uniquement, avec citations et prudences.",
-   "entrees": {
-    "dossier": "dossier",
-    "question": "question"
-   },
-   "sorties": {
-    "answer": "réponse"
-   },
-   "modele": {
-    "tache": "consumer_answer",
-    "prompt": "Q06"
-   },
-   "statut": "prevu"
-  },
-  {
-   "id": "log_question",
-   "fichier": "ragcreator/research/questions.py",
-   "groupe": "interfaces",
-   "ordre": 40,
-   "session": "S09",
-   "role": "Journal de vos questions, de vos notes et corrections (exemples « or » pour l'agent).",
-   "entrees": {
-    "question": "question",
-    "answer": "réponse",
-    "user_rating": "votre note"
-   },
-   "sorties": {
-    "question_log": "journal des questions"
-   },
-   "ecrit": [
-    "questions",
-    "examples"
-   ],
    "statut": "prevu"
   },
   {
@@ -1637,6 +1697,32 @@ window.CARTE = {
    },
    "sorties": {
     "datasets": "jeux d'entraînement, validation, test"
+   },
+   "statut": "prevu"
+  },
+  {
+   "id": "build_dossier",
+   "fichier": "ragcreator/research/dossier.py",
+   "groupe": "agent",
+   "ordre": 42,
+   "session": "S09",
+   "role": "Assemble le dossier de preuves classé, étiqueté, avec conflits et lacunes.",
+   "entrees": {
+    "ranked_evidence": "preuves classées",
+    "conflicts": "conflits",
+    "valid_plan": "plan"
+   },
+   "sorties": {
+    "dossier": "dossier de preuves",
+    "research_gaps": "lacunes"
+   },
+   "ecrit": [
+    "research_runs",
+    "gaps"
+   ],
+   "modele": {
+    "tache": "evidence_dossier",
+    "prompt": "Q04"
    },
    "statut": "prevu"
   },
@@ -1679,6 +1765,26 @@ window.CARTE = {
    "statut": "prevu"
   },
   {
+   "id": "write_answer",
+   "fichier": "ragcreator/research/answer.py",
+   "groupe": "agent",
+   "ordre": 43,
+   "session": "S09",
+   "role": "Rédige la réponse à partir du dossier uniquement, avec citations et prudences.",
+   "entrees": {
+    "dossier": "dossier",
+    "question": "question"
+   },
+   "sorties": {
+    "answer": "réponse"
+   },
+   "modele": {
+    "tache": "consumer_answer",
+    "prompt": "Q06"
+   },
+   "statut": "prevu"
+  },
+  {
    "id": "export_adapter",
    "fichier": "ragcreator/specialists/export.py",
    "groupe": "specialistes",
@@ -1691,6 +1797,27 @@ window.CARTE = {
    "sorties": {
     "adapter_gguf": "adaptateur GGUF"
    },
+   "statut": "prevu"
+  },
+  {
+   "id": "log_question",
+   "fichier": "ragcreator/research/questions.py",
+   "groupe": "interfaces",
+   "ordre": 44,
+   "session": "S09",
+   "role": "Journal de vos questions, de vos notes et corrections (exemples « or » pour l'agent).",
+   "entrees": {
+    "question": "question",
+    "answer": "réponse",
+    "user_rating": "votre note"
+   },
+   "sorties": {
+    "question_log": "journal des questions"
+   },
+   "ecrit": [
+    "questions",
+    "examples"
+   ],
    "statut": "prevu"
   },
   {
@@ -1803,6 +1930,24 @@ window.CARTE = {
    ],
    "type": "donnees",
    "boucle": true
+  },
+  {
+   "de": "analyse_situation",
+   "vers": "critique_completude",
+   "variables": [
+    "situation"
+   ],
+   "type": "donnees",
+   "boucle": false
+  },
+  {
+   "de": "analyse_situation",
+   "vers": "explorer_transversal",
+   "variables": [
+    "situation"
+   ],
+   "type": "donnees",
+   "boucle": false
   },
   {
    "de": "analyse_situation",
@@ -1994,6 +2139,15 @@ window.CARTE = {
    "boucle": false
   },
   {
+   "de": "charger_repertoire",
+   "vers": "explorer_transversal",
+   "variables": [
+    "repertoire_transversal"
+   ],
+   "type": "donnees",
+   "boucle": false
+  },
+  {
    "de": "charger_strategie",
    "vers": "banc_collecte",
    "variables": [
@@ -2147,10 +2301,28 @@ window.CARTE = {
    "boucle": false
   },
   {
+   "de": "concepts_documents",
+   "vers": "ponts_corpus",
+   "variables": [
+    "concepts_par_document"
+   ],
+   "type": "donnees",
+   "boucle": false
+  },
+  {
    "de": "control_channel",
    "vers": "schedule_jobs",
    "variables": [
     "worker_state"
+   ],
+   "type": "donnees",
+   "boucle": false
+  },
+  {
+   "de": "critique_completude",
+   "vers": "validate_plan",
+   "variables": [
+    "research_plan"
    ],
    "type": "donnees",
    "boucle": false
@@ -2347,6 +2519,33 @@ window.CARTE = {
    "boucle": false
   },
   {
+   "de": "explorer_transversal",
+   "vers": "fusionner_plans",
+   "variables": [
+    "exploration_transversale"
+   ],
+   "type": "donnees",
+   "boucle": false
+  },
+  {
+   "de": "explorer_transversal",
+   "vers": "plan_research",
+   "variables": [
+    "menu_transversal"
+   ],
+   "type": "donnees",
+   "boucle": false
+  },
+  {
+   "de": "explorer_transversal",
+   "vers": "ponts_corpus",
+   "variables": [
+    "exploration_transversale"
+   ],
+   "type": "donnees",
+   "boucle": false
+  },
+  {
    "de": "export_adapter",
    "vers": "evaluate_specialist",
    "variables": [
@@ -2421,6 +2620,16 @@ window.CARTE = {
    "boucle": false
   },
   {
+   "de": "fusionner_plans",
+   "vers": "critique_completude",
+   "variables": [
+    "angles_manquants",
+    "plan_fusionne"
+   ],
+   "type": "donnees",
+   "boucle": false
+  },
+  {
    "de": "generate_queries",
    "vers": "run_collectors",
    "variables": [
@@ -2479,6 +2688,15 @@ window.CARTE = {
    "vers": "run_benchmarks",
    "variables": [
     "eval_scores"
+   ],
+   "type": "donnees",
+   "boucle": false
+  },
+  {
+   "de": "label_chunks",
+   "vers": "concepts_documents",
+   "variables": [
+    "chunk_labels"
    ],
    "type": "donnees",
    "boucle": false
@@ -2593,6 +2811,15 @@ window.CARTE = {
   },
   {
    "de": "mcp_tools",
+   "vers": "explorer_transversal",
+   "variables": [
+    "question"
+   ],
+   "type": "donnees",
+   "boucle": false
+  },
+  {
+   "de": "mcp_tools",
    "vers": "log_question",
    "variables": [
     "question"
@@ -2656,9 +2883,18 @@ window.CARTE = {
   },
   {
    "de": "plan_research",
-   "vers": "validate_plan",
+   "vers": "fusionner_plans",
    "variables": [
-    "research_plan"
+    "plans_candidats"
+   ],
+   "type": "donnees",
+   "boucle": false
+  },
+  {
+   "de": "ponts_corpus",
+   "vers": "plan_research",
+   "variables": [
+    "ponts"
    ],
    "type": "donnees",
    "boucle": false
@@ -2782,6 +3018,15 @@ window.CARTE = {
   },
   {
    "de": "receive_question",
+   "vers": "explorer_transversal",
+   "variables": [
+    "question"
+   ],
+   "type": "donnees",
+   "boucle": false
+  },
+  {
+   "de": "receive_question",
    "vers": "log_question",
    "variables": [
     "question"
@@ -2839,6 +3084,15 @@ window.CARTE = {
    "vers": "rank_evidence",
    "variables": [
     "angle"
+   ],
+   "type": "donnees",
+   "boucle": false
+  },
+  {
+   "de": "resolve_entities",
+   "vers": "concepts_documents",
+   "variables": [
+    "graph"
    ],
    "type": "donnees",
    "boucle": false
