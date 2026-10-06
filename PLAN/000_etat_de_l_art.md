@@ -8,8 +8,9 @@
   10 questions : planification de la recherche, RAG agentique, temps et versions, structure
   navigable, graphes, découpage, petits modèles agents, citations, contraintes des modèles
   locaux, embeddings.
-- 37 publications retenues (dont 5 sur l'OCR, §13), plus 9 références fournies par
-  l'utilisateur et vérifiées (§12).
+- 39 publications retenues (dont 5 sur l'OCR, §13, et 2 sur les petits modèles spécialisés,
+  §14), des documentations techniques (§14) et des outils existants (§15), plus 9 références
+  fournies par l'utilisateur et vérifiées (§12).
   **J'ai lu leurs résumés, pas les articles complets.** Les chiffres
   cités viennent des résumés ; la plupart sont des prépublications non relues par des pairs,
   évaluées sur leurs propres jeux de test. Ce sont des indications fortes, pas des garanties :
@@ -345,6 +346,83 @@ plusieurs mentions de la bibliographie d'origine étaient inexactes :
    lecture), comparaison de deux moteurs sur un échantillon de pages, et mesure de l'effet sur la
    recherche.
 
+## 14. Petits modèles spécialisés et exécution sur une seule machine
+
+- **Sub-Billion, Super-Frontier** (juin 2026) : des modèles de 360 millions à 3 milliards de
+  paramètres, entraînés pour **une seule tâche** (extraction de relations), battent des modèles
+  frontières utilisés tels quels. Le meilleur, Qwen2.5-0.5B, obtient 0,83 de F1, contre 0,69 pour
+  GPT-5.4 et 0,66 pour Claude Sonnet 4.6 ; sur des textes littéraires, 0,92 contre 0,83. Les
+  auteurs insistent : le gain vient **de l'adaptation à la tâche, pas d'une supériorité
+  intrinsèque des petits modèles**, et il exige des données d'entraînement ciblées.
+  [arXiv:2606.22606](https://arxiv.org/abs/2606.22606)
+- **Lois d'échelle de la distillation spécialisée** (juin–août 2026) : en réduisant la taille,
+  la qualité **dans la tâche** baisse de façon prévisible, mais les **connaissances générales
+  s'effondrent bien avant**. Une supervision avec raisonnement explicite (*chain-of-thought*)
+  en récupère une partie. Conséquence : un spécialiste doit rester **étroit**, et une tâche de
+  raisonnement doit être enseignée avec son raisonnement.
+  [arXiv:2606.24747](https://arxiv.org/abs/2606.24747)
+- **Rappels** : un OCR de 0,9 milliard bat un modèle de 235 milliards (§13) ; DecomposeR-8B
+  (planification, §1), LegalSearch-R1-7B (recherche juridique, §3) et un agent de 0,8 milliard
+  entraîné par renforcement (§7) progressent fortement **sur leur tâche**.
+- **Entraîner sur une machine personnelle** : pour la famille Qwen3.5, dont MiMo fait partie,
+  une LoRA en 16 bits demande environ **3 Go de VRAM pour 0,8B, 5 Go pour 2B, 10 Go pour 4B et
+  22 Go pour 9B**. Le **4 bits (QLoRA) est déconseillé** pour cette famille. Le renforcement
+  (GRPO) est possible. L'export en GGUF et en adaptateur LoRA pour llama.cpp est prévu, mais
+  attention au modèle de chat et au jeton de fin, qui doivent être identiques à l'entraînement
+  et à l'usage.
+  [Unsloth — Qwen3.5 fine-tune](https://unsloth.ai/docs/models/qwen3.5/fine-tune)
+- **Ces chiffres supposent tout le modèle en VRAM.** Le **déchargement de couches** (*block
+  swap* : la moitié des couches gardée en mémoire vive et ramenée dynamiquement) réduit la VRAM
+  d'environ 50 % en masquant les transferts, selon les mainteneurs d'Unsloth (juin 2025). Un
+  entraînement LoRA d'un modèle de 27B a été rapporté à environ 19 Go de VRAM (août 2026), et
+  Unsloth annonce Gemma 3 27B sous 22 Go. Le prix à payer est la **vitesse** ; à mesurer sur la
+  machine réelle.
+  [discussion Unsloth #2827](https://github.com/unslothai/unsloth/discussions/2827) ·
+  [guide 27B en local](https://www.mindstudio.ai/blog/fine-tune-qwen3-8-27b-locally) ·
+  [exigences Unsloth](https://unsloth.ai/docs/get-started/fine-tuning-for-beginners/unsloth-requirements)
+- **Plusieurs adaptateurs sur un seul modèle** : `llama-server` charge plusieurs adaptateurs
+  LoRA au démarrage (`--lora`) et en choisit l'échelle **à chaque requête** (champ `lora`). Les
+  requêtes qui utilisent des adaptateurs différents ne sont pas regroupées : il faut donc
+  **traiter les tâches par lots, adaptateur par adaptateur**.
+  [llama.cpp — LoRA par requête](https://cdn04132025.gitlink.org.cn/replica/llama.cpp/commit/0da5d860266c6928b8c9408efbd264ae59fedda6) ·
+  [guide](https://www.simplified.guide/_export/xhtml/llama-cpp/server-set-lora-adapter)
+- **Mode routeur de `llama-server`** : charge et décharge des modèles à la demande sans
+  redémarrer ; `--models-max` limite le nombre de modèles chargés en même temps (le moins
+  récemment utilisé est déchargé).
+  [guide du mode routeur](https://glukhov.org/llm-hosting/llama-cpp/llama-server-router-mode/)
+
+**Pour nous.**
+- **Un seul modèle lourd en mémoire à la fois.** Le travail est organisé par **phases**, un
+  modèle par phase ; les étapes sans modèle s'intercalent.
+- **Une flotte de petits spécialistes** (0,8B à 4B, ou MiMo 9B si la machine le permet), un par
+  tâche étroite et répétitive. Ils sont entraînés sur les données que le système produit
+  lui-même, validées par vous et par des contrôles automatiques.
+- Un **modèle de base + plusieurs adaptateurs LoRA**, choisis à chaque requête : un seul modèle
+  en mémoire pour plusieurs rôles.
+- Un spécialiste n'est **promu** que s'il fait au moins aussi bien que le modèle enseignant sur
+  sa tâche, mesuré.
+
+## 15. Outils existants à évaluer avant de construire (2026)
+
+- **MinerU** (versions 3.x en 2026, OCR PP-OCRv6 dans son pipeline ; modèle MinerU2.5-Pro de
+  1,2B parmi les meilleurs OCR) et **Docling** (IBM, modèle Granite-Docling-258M) : conversion de
+  PDF, DOCX, images en Markdown ou JSON avec mise en page, tableaux et formules. Docling serait
+  plus rapide sur CPU et Mac, MinerU sur GPU.
+  [MinerU](https://pypi.org/project/mineru/) ·
+  [MinerU2.5-Pro](https://huggingface.co/opendatalab/MinerU2.5-Pro-2604-1.2B) ·
+  [comparatif](https://respan.ai/market-map/compare/docling-vs-ragflow)
+- **PaperQA2** (FutureHouse) : RAG pour la littérature scientifique, avec citations dans le
+  texte et détection de contradictions.
+  [FutureHouse](https://futurehouse.org/news/paperqa2-achieves-sota-performance-on-rag-qa-arena-science-benchmark)
+- **RAGFlow** (moteur RAG complet, analyse de documents via MinerU ou Docling) et **LightRAG**
+  (RAG par graphe).
+  [panorama des frameworks](https://www.olostep.com/blog/open-source-rag-frameworks)
+
+**Pour nous.** Avant d'écrire du code, une étude « réutiliser ou construire » (S01) :
+réutiliser MinerU ou Docling pour la lecture, s'inspirer de PaperQA2 pour la littérature
+scientifique, et ne construire que ce qui fait notre différence (agent, profils, temps,
+spécialistes, exécution séquentielle).
+
 ---
 
 ## Ce que cela change pour notre projet
@@ -365,6 +443,9 @@ plusieurs mentions de la bibliographie d'origine étaient inexactes :
 | L | **Crédibilité multicritère calibrée sur données** (pondération entropique) et détection des conflits en deux temps (léger, puis LLM) | §12 |
 | M | **Effort réparti entre sous-questions** selon ce qu'elles rapportent (exploration / exploitation) | §12 |
 | N | **Lecture de tout document** : texte natif d'abord, OCR spécialisé pour les scans (livres), MiMo en vision pour les figures et l'arbitrage, OCR vérifié et évalué par ses effets sur la recherche | §13 |
+| O | **Une seule machine, en séquentiel** : un modèle lourd à la fois, travail par phases (un modèle par phase) | §14 |
+| P | **Flotte de petits spécialistes** entraînés sur les données du système, un modèle de base + plusieurs adaptateurs LoRA, promotion seulement s'ils égalent l'enseignant | §14 |
+| Q | **Réutiliser avant de construire** (MinerU / Docling, PaperQA2, LightRAG) | §15 |
 
 ### Votre exemple, revu à la lumière de la recherche
 
