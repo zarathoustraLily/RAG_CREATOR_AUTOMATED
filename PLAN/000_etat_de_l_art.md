@@ -14,7 +14,7 @@
   **J'ai lu leurs résumés, pas les articles complets.** Les chiffres
   cités viennent des résumés ; la plupart sont des prépublications non relues par des pairs,
   évaluées sur leurs propres jeux de test. Ce sont des indications fortes, pas des garanties :
-  nos propres mesures (S15) trancheront.
+  nos propres mesures (bancs sur les PC, évaluation en S16) trancheront.
 - Les travaux plus anciens (RAPTOR, HippoRAG 2, Search-R1, Contextual Retrieval, bge-m3,
   Qwen3-Embedding…) n'apparaissent que comme points de comparaison.
 
@@ -222,7 +222,7 @@ tokens. Un budget de contexte fixé par modèle.
   [arXiv:2603.03300](https://arxiv.org/abs/2603.03300)
 - **Embeddings et re-classement** : plusieurs modèles multilingues récents sont à comparer à
   bge-m3 et bge-reranker-v2-m3 (Granite Embedding Multilingual R2, Qwen3-VL-Embedding et
-  Reranker, LAMAR). Je ne les ai pas étudiés en détail : à mesurer en S15.
+  Reranker, LAMAR). Je ne les ai pas étudiés en détail : à mesurer en S16.
   [arXiv:2605.13521](https://arxiv.org/abs/2605.13521) ·
   [arXiv:2601.04720](https://arxiv.org/abs/2601.04720) ·
   [arXiv:2607.22042](https://arxiv.org/abs/2607.22042)
@@ -309,7 +309,7 @@ plusieurs mentions de la bibliographie d'origine étaient inexactes :
     89,78 %) ;
   - sur olmOCR-Bench, en tête : Chandra OCR 2 (85,8 %) et dots.mocr (83,9 %).
 
-  Ce sont des chiffres d'un article de blog, à confirmer en S15.
+  Ce sont des chiffres d'un article de blog, à confirmer par le banc (S01, S05).
   [roboflow.com](https://roboflow.com/blog/best-open-source-ocr-models)
 - **llama.cpp prend en charge ces modèles OCR** (avr. 2026) : LightOnOCR, Qianfan-OCR,
   PaddleOCR-VL, GLM-OCR, DeepSeek-OCR, Dots.OCR, HunyuanOCR. On les sert avec `llama-server`
@@ -423,6 +423,81 @@ réutiliser MinerU ou Docling pour la lecture, s'inspirer de PaperQA2 pour la li
 scientifique, et ne construire que ce qui fait notre différence (agent, profils, temps,
 spécialistes, exécution séquentielle).
 
+## 16. Machines de l'utilisateur, portabilité, domaines retenus
+
+**Matériel et logiciels (vérifié le 2026-10-06)**
+- **RTX 5090 (architecture Blackwell)** : il faut **CUDA 12.8 ou plus** et un pilote **R570 ou
+  plus**. Des versions de llama.cpp compilées pour Blackwell (sm_120) existent, y compris pour
+  Windows.
+  [guide NVIDIA Blackwell](https://forums.developer.nvidia.com/t/software-migration-guide-for-nvidia-blackwell-rtx-gpus-a-guide-to-cuda-12-8-pytorch-tensorrt-and-llama-cpp/321330) ·
+  [compilation sm_120](https://bestllmfor.com/guides/llama-cpp-cuda-blackwell-sm120-build/)
+- **Unsloth** fonctionne sous **Windows** (installateur PowerShell, ou pip avec PyTorch), Linux
+  et WSL. L'entraînement est pris en charge sur les RTX 30, 40 et 50 ; CUDA 12.8 ou plus est
+  recommandé pour Blackwell ; Python 3.11 à 3.13.
+  [exigences Unsloth](https://unsloth.ai/docs/get-started/fine-tuning-for-beginners/unsloth-requirements.md) ·
+  [installation](https://www.unsloth.ai/docs/new/studio/install)
+
+**Fiscalité géorgienne**
+- Le **Code des impôts de Géorgie** existe en **version anglaise** sur matsne.gov.ge, le
+  portail législatif officiel.
+- Depuis la réforme de **2017** (« modèle estonien »), l'impôt sur les sociétés ne frappe plus
+  les bénéfices conservés, mais les **distributions** et les sorties assimilées, à **15 %** en
+  règle générale (chapitre XIII du Code).
+- Ces points sont à confirmer sur le texte en vigueur : le Code change souvent, d'où
+  l'importance de la veille.
+  [matsne.gov.ge](https://matsne.gov.ge/en/document/download/1043717/99/en/pdf) ·
+  [Andersen Géorgie](https://ge.andersen.com/georgian-corporate-income-tax-regime/)
+
+**Criminologie des escroqueries**
+- **The scammer's playbook** (*Journal of Economic Criminology*, 2026) : 282 récits de
+  victimes d'escroqueries aux cryptomonnaies (2023–2024), codés. Les escrocs suivent un
+  **« manuel » reproductible** (usurpation d'identité, persuasion, familiarité), pas de
+  l'opportunisme.
+  [ScienceDirect](https://www.sciencedirect.com/science/article/pii/S2949791426000060)
+- **Schéma médico-légal de la manipulation psychologique dans la cyberfraude** (2026) : analyse
+  de récits de victimes assistée par LLM.
+  [arXiv:2607.07751](https://arxiv.org/abs/2607.07751)
+- Cadres de référence du domaine : les principes de persuasion de Cialdini ; des revues
+  systématiques sur la fraude sentimentale et sur la vulnérabilité des victimes (2023, 2025).
+  [revue sur la fraude sentimentale](https://www.sciencedirect.com/science/article/pii/S2949791423000131) ·
+  [vulnérabilité des victimes](https://www.sciencedirect.com/science/article/abs/pii/S0747563225001815)
+
+**Collecte : navigateur plutôt qu'API**
+- L'**API Brave Search** n'a plus de formule gratuite pour les nouveaux comptes depuis février
+  2026 : un crédit mensuel de 5 $ (≈ 1 000 requêtes) exige une carte bancaire, puis c'est 5 $ les
+  1 000 requêtes. Ses conditions d'utilisation ont été mises à jour le 11 février 2026.
+  [tarifs](https://www.costbench.com/software/ai-search-apis/brave-search-api/free-plan/) ·
+  [alternatives et historique](https://www.firecrawl.dev/blog/brave-search-api-alternatives) ·
+  [conditions](https://api-dashboard.search.brave.com/documentation/resources/terms-of-service)
+- **Piloter Brave** : Brave est basé sur Chromium ; lancé avec `--remote-debugging-port`, il
+  accepte une connexion de Playwright (`connect_over_cdp`), sous Windows comme sous Linux.
+  [Playwright Python](https://playwright.dev/python/docs/api/class-browsertype) ·
+  [guide](https://www.browserstack.com/guide/playwright-connect-to-existing-browser)
+- **Agents de navigation pilotés par un LLM** : browser-use est open source (licence MIT, environ
+  108 000 étoiles, version 0.13.7 en juillet 2026) et accepte des modèles locaux. Retour
+  d'expérience publié : un modèle de 8B réussit les recherches simples mais échoue sur les tâches
+  à plusieurs étapes ; c'est fiable à partir d'environ 30B.
+  [présentation](https://www.kunalganglani.com/blog/open-source-ai-projects-developers-2026.md) ·
+  [modèles locaux](https://localaimaster.com/blog/browser-use-ollama-local)
+- **Détection de l'automatisation** : la plupart des sites et des moteurs détectent les
+  navigateurs pilotés (Playwright et équivalents) et les refusent. **Nous ne chercherons pas à
+  masquer l'automatisation** (souris simulée, empreinte falsifiée) : ce serait contourner des
+  protections, contre les conditions des sites, et finirait par des blocages.
+- **Pour nous, trois voies honnêtes** :
+  1. **collecte automatique là où elle est permise** : API conçues pour cela (OpenAlex, Europe PMC,
+     Crossref, Wikipédia, API Brave en option), et un récupérateur poli et identifié pour les
+     sites qui l'autorisent ;
+  2. **collecte assistée** : l'agent prépare des listes de lecture et les ouvre dans **votre**
+     Brave ; vous lisez, et ce que vous gardez est capturé (bouton « Envoyer au RAG », dossier de
+     téléchargements surveillé, Zotero). Vos choix deviennent des exemples **or** pour le
+     spécialiste de tri ;
+  3. **vos propres documents**.
+
+**Autres domaines demandés** : traitement des traumatismes et des phobies, hacking
+(cybersécurité). Leurs sources de référence sont à brancher avec les connecteurs (S08 et suivantes) : recommandations
+cliniques, Cochrane, Europe PMC pour le premier ; MITRE ATT&CK, base CVE / NVD, catalogue CISA
+KEV, OWASP, arXiv cs.CR pour le second. Accès et conditions d'utilisation à vérifier.
+
 ---
 
 ## Ce que cela change pour notre projet
@@ -446,6 +521,7 @@ spécialistes, exécution séquentielle).
 | O | **Une seule machine, en séquentiel** : un modèle lourd à la fois, travail par phases (un modèle par phase) | §14 |
 | P | **Flotte de petits spécialistes** entraînés sur les données du système, un modèle de base + plusieurs adaptateurs LoRA, promotion seulement s'ils égalent l'enseignant | §14 |
 | Q | **Réutiliser avant de construire** (MinerU / Docling, PaperQA2, LightRAG) | §15 |
+| R | **Portabilité Windows / Linux**, cartes Blackwell (CUDA 12.8+), entraînement local sous Windows ; domaines prioritaires : escroqueries et fiscalité géorgienne | §16 |
 
 ### Votre exemple, revu à la lumière de la recherche
 

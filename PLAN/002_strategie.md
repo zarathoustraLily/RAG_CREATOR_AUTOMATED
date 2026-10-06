@@ -1,6 +1,6 @@
 # 002 — Stratégie de réalisation
 
-> Statut : **proposition** · v0.4 · 2026-10-06
+> Statut : **proposition** · v0.5 · 2026-10-06
 > Prérequis : `001_but.md` (le quoi) et `000_etat_de_l_art.md` (cité « EdA §n »).
 > Le découpage en sessions est dans `003_prompts_sessions/`.
 
@@ -8,30 +8,38 @@
 
 ## 0. Résumé
 
-1. **Une seule machine, en séquentiel** : un seul modèle lourd en mémoire à la fois. La nuit,
-   le travail est découpé en **phases** (un modèle par phase, les étapes sans modèle
-   s'intercalent). Le jour, une question est traitée **sans recharger de modèle**.
-2. **Spécialiser plutôt que grossir** : chaque tâche étroite et répétitive est confiée à un
+1. **Installable partout, piloté à volonté** : Windows et Linux, détection du matériel, mode
+   dégradé sans GPU ; le travail en fond se **démarre, se met en pause, s'arrête et reprend** à
+   tout moment, sans perte, et la pause **libère la carte graphique**.
+2. **Une seule machine, en séquentiel** : un seul modèle lourd en mémoire à la fois. Le travail
+   en fond est découpé en **phases** (un modèle par phase, les étapes sans modèle
+   s'intercalent). Une question est traitée **sans recharger de modèle**.
+3. **Spécialiser plutôt que grossir** : chaque tâche étroite et répétitive est confiée à un
    **petit spécialiste** (un modèle de base + un adaptateur LoRA par tâche, choisi à chaque
    requête). Les spécialistes sont entraînés sur les données que le système produit et que vous
-   validez, et ne sont **promus** que s'ils égalent l'enseignant (EdA §13, §14).
-3. **Réutiliser avant de construire** : lecture des PDF par un outil existant ou un modèle OCR
+   validez, et ne sont **promus** que s'ils égalent l'enseignant (EdA §13, §14). **Tout modèle
+   est remplaçable** : les exemples sont stockés sans dépendre d'un modèle, et une commande
+   réentraîne tous les adaptateurs pour un nouveau modèle de base.
+4. **Réutiliser avant de construire** : lecture des PDF par un outil existant ou un modèle OCR
    spécialisé ; inspiration de PaperQA2 pour la littérature scientifique (EdA §15).
-4. **Deux moments de travail et un moment d'apprentissage** : *construire* une base vérifiée,
+5. **Deux moments de travail et un moment d'apprentissage** : *construire* une base vérifiée,
    datée et reliée ; *répondre* avec un agent qui planifie, cherche, contrôle et hiérarchise ;
    *apprendre* en entraînant les spécialistes.
-5. **L'agent planifie, le moteur exécute** : recherche hybride + re-classement classiques ;
+6. **L'agent planifie, le moteur exécute** : recherche hybride + re-classement classiques ;
    l'agent comprend, planifie, sélectionne (EdA §2).
-6. **Quatre couches de connaissance** : carte des thèmes, étiquettes, graphe typé, horloge ;
+7. **Quatre couches de connaissance** : carte des thèmes, étiquettes, graphe typé, horloge ;
    **profils de domaine** pour juger chaque domaine selon ses règles.
-7. **Le temps est une contrainte dure** pour le droit : versions, validité, date de référence,
+8. **Le temps est une contrainte dure** pour le droit : versions, validité, date de référence,
    veille (EdA §3).
-8. **Priorité ≠ solidité** : l'angle vient de vous, la solidité des preuves ; contre-point
+9. **Priorité ≠ solidité** : l'angle vient de vous, la solidité des preuves ; contre-point
    systématique (EdA §11).
-9. **Tout est vérifié, tracé, et devient un exemple** : JSON contraint, citations contrôlées,
+10. **Tout est vérifié, tracé, et devient un exemple** : JSON contraint, citations contrôlées,
    chaque appel journalisé avec son statut de validation.
-10. **On mesure** : cinq cas de référence, le **journal de vos vraies questions**, des jeux
-    tenus à l'écart pour promouvoir les spécialistes.
+11. **On mesure** : huit cas de référence (A–H), le **journal de vos vraies questions**, des
+    jeux tenus à l'écart, un **domaine entier tenu à l'écart** de l'entraînement (le hacking),
+    et `ragc bench` sur vos PC (le développement se fait dans le cloud, sans GPU).
+12. **Domaines prioritaires** : criminologie des escroqueries et fiscalité géorgienne ; puis
+    traumatismes et phobies, hacking, sciences comportementales, pharmacologie et mycologie.
 
 ---
 
@@ -50,14 +58,17 @@
 | Contenu collecté = donnée non fiable | Balises `<document>`, consigne, détection d'injection |
 | Citer, c'est vérifier | Fidélité contrôlée ; étapes de recherche plafonnées (EdA §8) |
 | Contexte compact | Peu d'outils, schémas compacts, budgets (EdA §9) |
-| Idempotence et reprise | Machines à états dans SQLite, baux, reprise exacte après coupure |
+| Idempotence et reprise | Machines à états dans SQLite, baux, reprise exacte après coupure, pause ou arrêt |
+| Installable partout | Windows et Linux d'abord ; dépendances téléchargées selon la plateforme et le GPU ; diagnostic à l'installation |
+| Tout modèle est remplaçable | Aucun nom de modèle codé en dur ; exemples d'entraînement neutres ; réentraînement en une commande ; repli sur prompts |
 
 ---
 
 ## 2. Architecture d'ensemble
 
 ```
- LA NUIT — construire, par phases (un modèle chargé par phase)
+ EN FOND, QUAND VOUS LE DÉCIDEZ — construire, par phases (un modèle chargé par phase)
+   ragc start · pause · resume · stop · status — la pause libère la carte graphique
  ┌───────────────────────────────────────────────────────────────────────────────────┐
  │ P0 sans modèle : import bibliothèque · collecte par API · extraction native ·     │
  │                  pré-contrôles · datation déterministe · découpage · veille (diff)│
@@ -68,10 +79,10 @@
  │ P3 indexation  : embeddings en lot                                                │
  │ P4 enseignant  : seconds avis, croisements, fiches, exemples d'entraînement       │
  └───────────────────────────────────────────────────────────────────────────────────┘
- PÉRIODIQUEMENT — apprendre
+ QUAND VOUS LE LANCEZ (ou quand assez d'exemples sont prêts) — apprendre
    P5 entraînement : jeux validés → LoRA → évaluation tenue à l'écart → promotion ou non
 
- LE JOUR — répondre (un seul modèle chargé, aucune bascule pendant une question)
+ À LA DEMANDE — répondre (un seul modèle chargé, aucune bascule pendant une question)
    question → R1 situation → R2 angle → R3 plan → R4 premier coup → R5 approfondissement
             → R6 contrôles → R7 hiérarchisation → R8 dossier → réponse
    recherche hybride + re-classement sur le processeur (petits modèles d'aide)
@@ -100,7 +111,7 @@
   sélection **par requête** (champ `lora`) ; les requêtes sont **groupées par adaptateur**, car
   des adaptateurs différents ne sont pas traités ensemble (EdA §14).
 
-### 3.2 Les phases de nuit
+### 3.2 Le travail en fond : phases et pilotage
 
 | Phase | Modèle chargé | Travaux |
 |---|---|---|
@@ -108,17 +119,31 @@
 | P1 | outil ou modèle **OCR** | lecture des pages scannées, contrôles d'OCR |
 | P2 | **base + adaptateurs** (ou MiMo avant les spécialistes) | chartes, tri, vérification, étiquetage, résumés, enrichissement, arbitrage d'entités, descriptions de figures et arbitrage d'OCR (vision de MiMo) |
 | P3 | **embeddings** (GPU en lot) | indexation des nouveaux extraits |
-| P4 | **enseignant** (Qwen3.8-27B, ou MiMo avec réflexion) | seconds avis, croisements d'affirmations, fiches, analyse de couverture, **étiquettes d'enseignant** sur un échantillon |
+| P4 | **enseignant** (Qwen3.8-27B, Qwen3.8-Flash-Next ou MiMo avec réflexion) | seconds avis, croisements d'affirmations, fiches, analyse de couverture, **étiquettes d'enseignant** sur un échantillon |
 | P5 | **entraînement** (occasionnel) | LoRA des spécialistes, évaluation, promotion |
 
-- L'**ordonnanceur de nuit** (`ragc nuit`, lancé par un minuteur `systemd` ou `launchd`, pas de
-  service permanent) enchaîne les phases dans la plage horaire autorisée, **boucle** tant qu'il
-  reste du travail et du temps, et s'arrête proprement à l'heure dite.
+- **Le travailleur de fond** est un processus Python indépendant, piloté par des commandes
+  qui marchent à l'identique sous Windows et Linux :
+  - `ragc start` : démarre, ou reprend là où il s'était arrêté ;
+  - `ragc pause` : termine l'élément en cours (ou le met de côté si cela dépasse un délai
+    réglable), **décharge le modèle** et libère la carte graphique en ≤ 30 s ;
+  - `ragc resume` : recharge le modèle de la phase en cours et continue ;
+  - `ragc stop` : pause, puis arrêt du processus ; `ragc status` : phase, progression, modèle
+    chargé, file d'attente.
+- **Pilotage sans signaux Unix** (absents sous Windows) : un petit canal de contrôle local (port
+  réservé à la machine, protégé par un jeton, ou fichier de commande), commun aux deux systèmes.
+- **Plages horaires optionnelles** (« de 23 h à 7 h ») et démarrage automatique optionnel
+  (Planificateur de tâches sous Windows, `systemd --user` sous Linux) : le travailleur démarre et
+  se met en pause de lui-même aux heures dites.
+- **Pause automatique optionnelle** quand un autre programme réclame la carte graphique (un jeu,
+  votre conversation avec Qwen3.8) : à évaluer en S02 (détection de l'occupation de la VRAM).
+- Le travailleur **boucle** sur les phases tant qu'il reste du travail ; chaque élément est
+  validé en base avant le suivant (reprise exacte, aucun double traitement).
 - Les étapes sans modèle (P0) s'exécutent **pendant** qu'un modèle reste chargé : on ne décharge
   pas MiMo pour découper des documents.
-- Ordre et durées réglables ; reprise exacte après coupure ; rapport au matin.
+- Ordre et durées réglables ; reprise exacte après coupure ; **rapport** à chaque arrêt ou à heure fixe.
 
-### 3.3 Le jour : répondre sans recharger
+### 3.3 Répondre sans recharger
 
 | Mode | Modèle chargé | Fonctionnement | Quand |
 |---|---|---|---|
@@ -127,11 +152,25 @@
 | **Qwen3.8 seul** | Qwen3.8 | R1–R8 par prompts | Repli quand Qwen3.8 est chargé et que l'adaptateur n'existe pas encore |
 
 Le proxy (Open WebUI, LM Studio) détecte le modèle chargé et choisit le mode sans bascule. Une
-bascule n'a lieu que si vous la demandez.
+bascule n'a lieu que si vous la demandez. Si le travailleur de fond tourne quand vous posez une
+question, il se met **en pause** le temps de la réponse (réglable).
 
 ### 3.4 Profils matériels
 
-Fichier `profils_materiels/<nom>.yaml` établi en S01 à partir de **votre** machine :
+**Détection automatique** à l'installation (`ragc init`, `ragc doctor`) : système, processeur,
+mémoire vive, GPU, VRAM, version de CUDA et du pilote, espace disque. Elle produit
+`profils_materiels/<machine>.yaml`, modifiable, qui fixe les choix ci-dessous. Sans GPU, le
+logiciel fonctionne en **mode dégradé** (petits modèles sur processeur, lent mais complet).
+
+**Machines de référence** (à confirmer par `ragc bench` en S01) :
+
+| Machine | Ce qui devrait tenir |
+|---|---|
+| **RTX 5090, 32 Go** (CUDA 12.8+, pilote R570+) | MiMo 9B en Q8 ; Qwen3.8-27B en Q4 ; LoRA 16 bits d'un 9B (≈ 22 Go) ; LoRA d'un 27B avec déchargement de couches (lent) |
+| **RTX 4090, 24 Go** | MiMo 9B ; Qwen3.8-27B en Q4 ; LoRA d'un 9B à la limite ; 27B avec déchargement, plus lent |
+| **Les deux en réseau** (option) | Une machine construit et entraîne pendant que l'autre sert vos questions : chaque modèle est une adresse réseau dans la configuration, rien d'autre à changer |
+
+Ce que le profil matériel décide :
 
 | Élément décidé | Selon |
 |---|---|
@@ -161,9 +200,10 @@ Fichier `profils_materiels/<nom>.yaml` établi en S01 à partir de **votre** mac
 
 ### 4.2 Profils de domaine
 
-`profils/<nom>.yaml` : `juridique_fiscal`, `pharmaco_medical`, `mycologie`,
-`sciences_comportementales` (neurosciences, psychologie, économie comportementale, vente),
-`generique`.
+`profils/<nom>.yaml` : `criminologie`, `juridique_fiscal`, `sante_clinique`,
+`cybersecurite`, `sciences_comportementales` (neurosciences, psychologie, économie
+comportementale, vente), `pharmaco_medical`, `mycologie`, `generique`. Un profil est un
+**fichier de configuration** : ajouter un domaine ne demande pas de code.
 
 | Élément | `juridique_fiscal` | `sciences_comportementales` |
 |---|---|---|
@@ -173,7 +213,15 @@ Fichier `profils_materiels/<nom>.yaml` établi en S01 à partir de **votre** mac
 | Relations | modifie, abroge, applique, interprète, cite, déroge à | cause, favorise, inhibe, médie, modère, réplique, échoue à répliquer |
 | Actualisation | codes : mensuelle ; barèmes : à chaque loi de finances | publications : trimestrielle ; rétractations : mensuelle |
 | Filtre temporel | dur | souple |
-| Sources de référence | Légifrance, Judilibre, BOFiP, EUR-Lex, matsne.gov.ge | Europe PMC, OpenAlex, Crossref (rétractations), vos livres |
+| Sources de référence | Légifrance, Judilibre, BOFiP, EUR-Lex, matsne.gov.ge (Code des impôts géorgien en anglais), rs.ge | Europe PMC, OpenAlex, Crossref (rétractations), vos livres |
+
+| Élément | `criminologie` (escroqueries) | `sante_clinique` (traumatismes, phobies) | `cybersecurite` (hacking) |
+|---|---|---|---|
+| Étiquettes | type d'escroquerie, étape du scénario, technique de manipulation, vecteur, type de source, pays | trouble, traitement, type d'étude, population, effet, recommandation et organisme, date | technique (référentiel ATT&CK), CVE, produit et versions, sévérité, date, statut (corrigé ou non) |
+| Solidité (forte → faible) | méta-analyse / revue systématique > étude empirique (expérience, enquête de victimisation) > analyse de récits codés > rapport officiel (police, régulateur) > enquête journalistique > témoignage isolé | recommandation clinique (HAS, NICE, APA…) > méta-analyse / Cochrane > essai randomisé > observationnel > série de cas > avis d'expert | référentiel officiel (ATT&CK, NVD, avis d'éditeur, CISA) > publication académique > rapport d'éditeur de sécurité > compte rendu technique > blog |
+| Relations | précède, exploite (un biais), cible, se combine avec, est contré par | traite, est recommandé pour, contre-indiqué avec, plus efficace que | exploite, affecte, est atténué par, précède (chaîne d'attaque) |
+| Actualisation | trimestrielle | recommandations : à chaque mise à jour ; publications : trimestrielle | **quotidienne à hebdomadaire** (CVE) |
+| Cadrage | compréhension, détection, prévention | documentaire, pas d'avis thérapeutique | compréhension, défense, tests autorisés |
 
 `pharmaco_medical` : méta-analyse > essai randomisé > observationnel > cas > animal / in vitro >
 avis d'expert, avis d'agences ; affirmations sensibles (dose, toxicité, interactions).
@@ -272,14 +320,63 @@ graphe en tables, ou **LightRAG** si S01 le retient ; exports GraphML / JSON.
 - **Import de bibliothèque** : dossiers surveillés ; Zotero et Calibre si leurs données locales
   le permettent (à vérifier en S01) ; métadonnées reprises.
 
-### 5.5 Collecte
+### 5.5 Collecte : le module « Méthodologie et technique de recherche »
 
-API ouvertes d'abord, sans service local (Wikipédia, Europe PMC, OpenAlex, Crossref, Légifrance /
-Judilibre avec clé gratuite, BOFiP, EUR-Lex, matsne.gov.ge, MycoBank) ; **SearxNG optionnel**,
-démarré seulement pendant la phase P0 ; récupérateur poli (`robots.txt`, limites, cache) ;
-collectes ciblées issues des lacunes des questions.
+La façon de chercher vit dans un **dossier à part qui vous appartient** :
+`methodologie_recherche/`. Le reste du logiciel ne connaît que son **contrat** ; vous pouvez
+donc modifier ce module, le tester et le comparer, sans toucher au reste.
+
+| Partie | Contenu | Modifiable par |
+|---|---|---|
+| `strategies/` | la **méthodologie** par domaine, en YAML : sources prioritaires, formulations de requêtes, langues, vocabulaire, critères de tri, règles d'arrêt | vous, sans programmer |
+| `collecteurs/` | les **techniques** : un mini-script par technique, chacun respectant `contrat.py` (`rechercher(requete) → candidats`, `recuperer(candidat) → document`, politesse déclarée) | vous (en Python) |
+| `registre.yaml` | quelles techniques sont actives, dans quel ordre, avec quels réglages | vous |
+| `tests/`, `tests/vos_tests/` | tests de conformité au contrat (automatiques) et vos propres tests | vous |
+| `bancs/` | banc de mesure : rendement par technique, doublons, refus, temps ; étiquetage manuel d'un échantillon pour mesurer la précision ; comparaison de deux stratégies | vous |
+
+Techniques fournies au départ : vos dossiers (locale), OpenAlex et Wikipédia (API prévues pour
+l'accès automatique), **liste de lecture** (collecte assistée : liens de recherche et documents
+proposés, que vous ouvrez dans votre navigateur), puis en S08 Europe PMC, Crossref, Légifrance /
+Judilibre, un récupérateur poli et l'extension « Envoyer au RAG ». Les techniques fournies
+respectent `robots.txt` et les conditions des sources ; un refus d'accès (`AccesRefuse`) fait
+basculer la source vers la collecte assistée. Chaque document garde la trace de la stratégie et
+de la technique qui l'ont trouvé, pour mesurer l'effet de vos modifications.
+
+### 5.6 Installation et portabilité
+
+- **Paquet Python** (3.11 à 3.13) installable par `pipx` ou `uv`, avec une commande d'installation
+  par système (script PowerShell pour Windows, shell pour Linux) qui :
+  - détecte le matériel (§3.4) ;
+  - télécharge la **bonne version de `llama-server`** pour le système et le GPU (CUDA 12.8+ pour
+    les cartes Blackwell comme la 5090, EdA §16 ; version CPU sinon) ;
+  - propose les modèles adaptés à la machine ;
+  - lance `ragc doctor`.
+- **Rien n'est figé sur une machine** : chemins, modèles, ports et profil matériel sont dans la
+  configuration ; la base SQLite et les adaptateurs se copient d'une machine à l'autre.
+- **Entraînement** : Unsloth sous Windows (installateur officiel) ou Linux / WSL (EdA §16) ;
+  extra `train` optionnel — le logiciel fonctionne sans.
+- **Développement** : le code est écrit et testé **hors ligne dans le cloud** (sans GPU) ; les
+  **mesures réelles** passent par `ragc bench <scénario>`, que vous lancez sur vos PC et qui
+  produit un rapport (`reports/bench/…`) à transmettre.
 
 ---
+
+### 5.7 Organisation du code : mini-scripts et carte du programme
+
+- **Mini-scripts** : un fichier = une responsabilité (viser moins de 200 lignes), regroupés par
+  dossier (socle, lecture, vérification, recherche…).
+- **Manifeste** en tête de chaque script — un dictionnaire `__manifeste__` lu sans exécuter le
+  code : nom, rôle (en français), moment (socle, construire, répondre, apprendre, évaluer),
+  phase, étape, **ordre chronologique**, **variables d'entrée et de sortie** (nom et
+  description), scripts appelés, tables lues et écrites, prompt et modèle utilisés, session.
+- **Carte du programme** (`carte_du_programme/`) : un générateur lit tous les manifestes (et, tant
+  que le code n'existe pas, l'architecture prévue) et produit une **page HTML5 interactive** :
+  scripts disposés par moment et dans l'ordre chronologique, flèches de flux portant le nom des
+  variables, fiche détaillée de chaque script, parcours guidés (vie d'un document, d'une
+  question, d'un spécialiste), recherche par variable.
+- **Contrôles automatiques** : chaque script a un manifeste ; chaque variable d'entrée est
+  produite par un autre script ou déclarée externe ; la carte est **régénérée** et vérifiée à
+  chaque session (`ragc carte`, intégration continue).
 
 ## 6. Construire : le pipeline
 
@@ -304,7 +401,7 @@ collectes ciblées issues des lacunes des questions.
 **Vérification (E4, E7)** : grilles ancrées ; **décision calculée par le code**
 (`score = 0,45·pertinence + 0,30·fiabilité + 0,25·qualité` + niveau de source, règles dures,
 seuils 0,70 / 0,45, second avis entre les deux) ; crédibilité multicritère, poids calibrés sur
-données en S17 (EdA §12) ; réplication et rétractations tirées de sources explicites ; jeu de
+données en S16 (EdA §12) ; réplication et rétractations tirées de sources explicites ; jeu de
 référence annoté couvrant les quatre profils ; revue humaine dont les décisions deviennent des
 **exemples or**.
 
@@ -362,7 +459,7 @@ Ambiguïté forte : question posée (mode `demander`) ou hypothèse annoncée (m
 - **Hiérarchisation** : `P` poids de la sous-question (ajusté par l'angle) · `S` solidité
   (échelle du profil, réplication, crédibilité) · `A` applicabilité à la situation · `F`
   fraîcheur (0 si non en vigueur sous filtre dur) · `R` pertinence du re-classement ; poids
-  réglables, calibrés en S17.
+  réglables, calibrés en S16.
 - **Dossier** : par sous-question, preuves `[S#]` avec étiquettes (nature, solidité, juridiction,
   version, **page**), conflits, contre-point, **lacunes** ; Markdown compact et JSON ; budget
   par modèle.
@@ -413,11 +510,18 @@ L'OCR n'est pas entraîné : on utilise un outil ou un modèle déjà spécialis
 - **Statuts** : **or** (validé par vous ou par un contrôle déterministe : version, citation,
   identifiant) ; **argent** (accord de deux passes de l'enseignant, ou enseignant + contrôles) ;
   **rejeté**. Seuls or et argent servent à l'entraînement.
-- **Enseignant** : le meilleur modèle disponible **en lot la nuit** (Qwen3.8-27B, ou MiMo avec
-  réflexion), choisi en S01 sur mesures.
+- **Enseignant** : le meilleur modèle disponible, **en lot dans le travail en fond**
+  (Qwen3.8-27B, Qwen3.8-Flash-Next si la mémoire le permet, ou MiMo avec réflexion), choisi sur
+  mesures.
 - **Séparation** : jeu d'entraînement / validation / **test tenu à l'écart**, découpé **par
   thème et par document** (pas de fuite entre jeux) ; les questions des cas de référence et
   d'évaluation ne servent jamais à l'entraînement.
+- **Domaine tenu à l'écart** : le **hacking** ne fournit aucun exemple d'entraînement ; il sert à
+  vérifier que les spécialistes **généralisent** à un domaine nouveau (cible : ≥ 90 % de la
+  performance de l'enseignant).
+- **Format neutre** : un exemple = tâche, entrée structurée, sortie structurée, statut,
+  provenance — **sans** gabarit de modèle. Le gabarit du modèle de base n'est appliqué qu'au
+  moment de l'entraînement : les mêmes exemples servent pour n'importe quel modèle de base.
 
 ### 8.3 Entraînement, service, promotion
 
@@ -438,7 +542,25 @@ L'OCR n'est pas entraîné : on utilise un outil ou un modèle déjà spécialis
 - **Boucle continue** : réentraînement quand assez de nouveaux exemples or et argent se sont
   accumulés.
 
-### 8.4 Réalisme
+### 8.4 Changer de modèle de base
+
+Les modèles évoluent (Qwen3.8, MiMo et leurs successeurs). Un adaptateur LoRA n'est valable que
+pour **le** modèle sur lequel il a été entraîné. D'où :
+
+- un **registre des spécialistes** (`specialists`) : tâche, modèle de base (nom **et empreinte
+  du fichier**), adaptateur, version, jeu d'entraînement, métriques, statut ;
+- au chargement, tout adaptateur dont l'empreinte de base ne correspond pas est **désactivé** ;
+  la tâche **retombe sur les prompts**, et le logiciel reste fonctionnel ;
+- **`ragc specialists retrain --base <modèle>`** : réentraîne **tous les adaptateurs requis** pour
+  le nouveau modèle de base, à partir des exemples neutres, dans l'ordre de §8.1, les évalue sur
+  les jeux tenus à l'écart et ne promeut que ceux qui passent la porte ; reprise possible après
+  interruption (c'est un travail de fond comme les autres) ;
+- les **recettes d'entraînement** (hyperparamètres, versions des outils) sont enregistrées : un
+  entraînement est **reproductible** ;
+- changement de **modèle du quotidien** (Qwen3.8 → successeur) : seul l'adaptateur « recherche »
+  posé sur lui est à refaire.
+
+### 8.5 Réalisme
 
 Au démarrage, aucun spécialiste n'existe : le système travaille avec MiMo et l'enseignant, plus
 lentement. Les premiers spécialistes (tri, étiquetage) peuvent apparaître dès que quelques
@@ -471,9 +593,11 @@ courte** pour le spécialiste qui le remplace.
 
 ## 10. Qualité, tests, évaluation
 
-- **Hors ligne** par défaut (faux serveurs OpenAI, OCR, vision ; fixtures fictives) ;
-  `pytest --live` en conditions réelles.
-- **Cas de référence A–E** ; **journal de vos vraies questions** (objectif : 50 questions notées) ;
+- **Hors ligne** par défaut, dans le cloud (faux serveurs OpenAI, OCR, vision ; fixtures
+  fictives) ; **en conditions réelles sur vos PC** via `ragc bench` et `pytest --live`, rapports
+  transmis et notés dans le journal.
+- Tests **Windows et Linux** (intégration continue sur les deux systèmes si possible).
+- **Cas de référence A–H** ; **journal de vos vraies questions** (objectif : 50 questions notées) ;
   jeux de référence (vérification, étiquetage, entités, pages OCR) ; **tests tenus à l'écart par
   spécialiste**.
 - Contrôles **déterministes** d'abord (versions, identifiants, articles, valeurs), juge LLM
@@ -516,19 +640,24 @@ courte** pour le spécialiste qui le remplace.
 | Injection de prompt | Balises, consigne, détection, décision par le code |
 | Accès aux sources officielles | Connecteurs optionnels, documentés |
 | Droits d'auteur (livres, articles) | Usage personnel et local, source citée, pas de redistribution |
+| Différences Windows / Linux (processus, chemins, signaux) | Canal de contrôle commun, chemins abstraits, tests sur les deux systèmes |
+| Pilotes et CUDA incompatibles (Blackwell) | Détection à l'installation, version de `llama-server` adaptée, `ragc doctor` |
+| Mesures impossibles dans le cloud | `ragc bench` sur vos PC ; jamais de chiffre « mesuré » sans rapport |
+| Changement de modèle de base qui casse les spécialistes | Empreinte vérifiée, repli sur prompts, réentraînement en une commande |
+| Contenus à double usage (hacking, procédés d'escrocs) | Cadrage des chartes : compréhension, détection, prévention ; pas d'aide opérationnelle |
 
 ---
 
 ## 13. Plan de réalisation
 
-17 sessions, dans `003_prompts_sessions/` :
+16 sessions, dans `003_prompts_sessions/` :
 
 | Jalon | Sessions | Résultat visible |
 |---|---|---|
-| **J0 — Décisions techniques** | S01 | Outils retenus, profil matériel de votre machine, mesures de base |
-| **J1 — Base locale lue, vérifiée, datée** | S02 → S08 | Votre bibliothèque (livres scannés compris) lue, vérifiée, étiquetée, datée, indexée ; exemples capturés dès le début |
-| **J2 — Un RAG qui raisonne** | S09 | `ragc ask --show-plan` : plan, dossier hiérarchisé, angle (cas B, C, E) |
-| **J3 — Utilisable au quotidien** | S10 | Nuits séquentielles automatiques + Open WebUI / LM Studio via le proxy + journal des questions |
-| **J4 — Spécialistes** | S11, S12 | Usine à spécialistes ; premiers spécialistes promus ; spécialistes de l'agent ; option adaptateur Qwen3.8 |
-| **J5 — Web et connaissance reliée et à jour** | S13 → S16 | Connecteurs officiels, graphe, veille, carte et fiches (cas A, D) |
-| **J6 — Évaluation globale** | S17 | Cibles mesurées, modes comparés, réglages calibrés |
+| **J0 — Décisions et mesures** | S01 | Outils retenus, `ragc bench` prêt à lancer sur vos PC, premiers chiffres |
+| **J1 — Base locale pilotable** | S02 → S08 | Installable sous Windows et Linux ; travail en fond démarrable, suspendable, arrêtable ; bibliothèque lue, vérifiée, étiquetée, datée, indexée ; collecte prioritaire (escroqueries, fiscalité géorgienne) ; exemples capturés dès le début |
+| **J2 — Un RAG qui raisonne** | S09 | `ragc ask --show-plan` : plan, dossier hiérarchisé, angle ; cas A, B, C, E, F |
+| **J3 — Utilisable au quotidien** | S10 | Open WebUI / LM Studio via le proxy, notes des réponses, rapports, plages horaires |
+| **J4 — Spécialistes** | S11, S12 | Usine à spécialistes, réentraînement en une commande, domaine tenu à l'écart ; spécialistes de l'agent ; adaptateur « recherche » sur Qwen3.8 |
+| **J5 — Connaissance reliée et à jour** | S13 → S15 | Veille (fiscalité géorgienne), graphe, carte et fiches ; domaines traumatismes et phobies, hacking ; cas G, H, D |
+| **J6 — Évaluation globale** | S16 | Cibles mesurées, modes comparés, réglages calibrés |
