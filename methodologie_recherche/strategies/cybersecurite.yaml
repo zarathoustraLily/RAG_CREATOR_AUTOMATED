@@ -1,0 +1,39 @@
+# Cybersécurité (hacking) : point de vue défensif.
+# Domaine tenu à l'écart : ne sert PAS à entraîner les spécialistes, seulement à vérifier
+# qu'ils généralisent à un domaine qu'ils n'ont jamais vu.
+domaine: cybersecurite
+description: "Techniques d'attaque documentées, détection, atténuation, vulnérabilités publiées."
+
+langues: [fr, en]
+
+gabarits:
+  fr:
+    - "{sujet} détection"
+    - "{sujet} mesures de protection ANSSI"
+  en:
+    - "{sujet} detection mitigation"
+    - "{sujet} MITRE ATT&CK"
+    - "{sujet} vulnerability advisory"
+
+sources_preferees:
+  - cert.ssi.gouv.fr
+  - cyber.gouv.fr
+  - attack.mitre.org
+  - nvd.nist.gov
+  - cisa.gov
+  - owasp.org
+  - enisa.europa.eu
+
+angles_obligatoires:
+  - "description de la technique et de son contexte (référentiel ATT&CK)"
+  - "détection et journaux utiles"
+  - "atténuation et correctifs"
+  - "état actuel : vulnérabilités et avis récents"
+
+criteres_tri:
+  garder:
+    - "avis officiel, référentiel, article de recherche, retour d'expérience défensif"
+  ecarter:
+    - "outil ou code d'exploitation prêt à l'emploi"
+
+cadrage: "Compréhension et défense ; pas de code d'exploitation."

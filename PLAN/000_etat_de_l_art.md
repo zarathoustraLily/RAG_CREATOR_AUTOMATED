@@ -469,6 +469,15 @@ spécialistes, exécution séquentielle).
   [tarifs](https://www.costbench.com/software/ai-search-apis/brave-search-api/free-plan/) ·
   [alternatives et historique](https://www.firecrawl.dev/blog/brave-search-api-alternatives) ·
   [conditions](https://api-dashboard.search.brave.com/documentation/resources/terms-of-service)
+- **Pourquoi « l'API ne marche pas » (constaté le 6 octobre 2026)** : interrogées sans clé depuis
+  notre machine de développement, les deux API ont répondu « trop de requêtes ». **OpenAlex**
+  accorde sans clé un petit budget quotidien **partagé par toutes les machines de la même adresse
+  IP** ; une **clé gratuite** (compte sur openalex.org) donne un budget dix fois plus grand,
+  réservé à son titulaire. **Wikimedia** limite les clients anonymes à **10 requêtes par minute**,
+  et en accorde **200** à un client dont l'agent utilisateur donne un moyen de contact (e-mail ou
+  URL). Une clé ou un contact manquant suffit donc à faire échouer une collecte par API.
+  [authentification OpenAlex](https://help.openalex.org/guides/authentication) ·
+  [limites Wikimedia](https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits)
 - **Piloter Brave** : Brave est basé sur Chromium ; lancé avec `--remote-debugging-port`, il
   accepte une connexion de Playwright (`connect_over_cdp`), sous Windows comme sous Linux.
   [Playwright Python](https://playwright.dev/python/docs/api/class-browsertype) ·

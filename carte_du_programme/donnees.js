@@ -489,14 +489,28 @@ window.CARTE = {
    "groupe": "methodo",
    "ordre": 8,
    "session": "S08",
-   "role": "Charge la méthodologie d'un domaine (YAML) et la fusionne avec la méthodologie commune.",
+   "role": "Charge la méthodologie d'un domaine (YAML) et la fusionne avec celles dont elle hérite.",
    "entrees": {
     "domaine": "nom du domaine"
    },
    "sorties": {
     "strategie": "méthodologie du domaine"
    },
-   "statut": "prevu"
+   "statut": "realise",
+   "lit": [
+    "methodologie_recherche/strategies/*.yaml"
+   ]
+  },
+  {
+   "role": "Définit le contrat des techniques : requête, candidat, document, politesse, erreurs.",
+   "groupe": "methodo",
+   "ordre": 8,
+   "session": "S08",
+   "entrees": {},
+   "sorties": {},
+   "id": "contrat_collecteur",
+   "fichier": "methodologie_recherche/collecteurs/contrat.py",
+   "statut": "realise"
   },
   {
    "id": "write_charter",
@@ -532,9 +546,10 @@ window.CARTE = {
     "registre": "registre.yaml"
    },
    "sorties": {
-    "collecteurs": "techniques actives"
+    "collecteurs": "techniques actives",
+    "problemes_registre": "techniques écartées et pourquoi"
    },
-   "statut": "prevu"
+   "statut": "realise"
   },
   {
    "id": "generate_queries",
@@ -574,7 +589,18 @@ window.CARTE = {
    "sorties": {
     "requetes_strategie": "formulations de requêtes"
    },
-   "statut": "prevu"
+   "statut": "realise"
+  },
+  {
+   "role": "Client HTTP identifié (agent utilisateur honnête), refus convertis en AccesRefuse ou Ralentir, lecture de robots.txt.",
+   "groupe": "methodo",
+   "ordre": 9,
+   "session": "S08",
+   "entrees": {},
+   "sorties": {},
+   "id": "outils_http",
+   "fichier": "methodologie_recherche/collecteurs/outils_http.py",
+   "statut": "realise"
   },
   {
    "id": "collecteur_dossier_local",
@@ -590,7 +616,7 @@ window.CARTE = {
     "candidats": "candidats trouvés",
     "document_collecte": "contenu récupéré"
    },
-   "statut": "prevu"
+   "statut": "realise"
   },
   {
    "id": "collecteur_liste_lecture",
@@ -605,7 +631,7 @@ window.CARTE = {
    "sorties": {
     "candidats": "liens de recherche à ouvrir"
    },
-   "statut": "prevu"
+   "statut": "realise"
   },
   {
    "id": "collecteur_openalex",
@@ -613,7 +639,7 @@ window.CARTE = {
    "groupe": "methodo",
    "ordre": 10,
    "session": "S08",
-   "role": "Technique automatique : publications scientifiques via l'API OpenAlex.",
+   "role": "Technique automatique : publications scientifiques via l'API OpenAlex (clé gratuite conseillée).",
    "entrees": {
     "requete": "une requête"
    },
@@ -621,7 +647,7 @@ window.CARTE = {
     "candidats": "candidats trouvés",
     "document_collecte": "PDF en accès libre"
    },
-   "statut": "prevu"
+   "statut": "realise"
   },
   {
    "id": "collecteur_wikipedia",
@@ -629,7 +655,7 @@ window.CARTE = {
    "groupe": "methodo",
    "ordre": 10,
    "session": "S08",
-   "role": "Technique automatique : articles de Wikipédia via son API.",
+   "role": "Technique automatique : articles de Wikipédia via son API (contact conseillé).",
    "entrees": {
     "requete": "une requête"
    },
@@ -637,7 +663,18 @@ window.CARTE = {
     "candidats": "candidats trouvés",
     "document_collecte": "contenu de l'article"
    },
-   "statut": "prevu"
+   "statut": "realise"
+  },
+  {
+   "role": "Gabarit à copier pour écrire votre propre technique (inactif, absent du registre).",
+   "groupe": "methodo",
+   "ordre": 10,
+   "session": "S08",
+   "entrees": {},
+   "sorties": {},
+   "id": "modele_collecteur",
+   "fichier": "methodologie_recherche/collecteurs/modele_collecteur.py",
+   "statut": "realise"
   },
   {
    "id": "banc_collecte",
@@ -645,16 +682,19 @@ window.CARTE = {
    "groupe": "methodo",
    "ordre": 11,
    "session": "S08",
-   "role": "Mesure vos techniques et stratégies : rendement, doublons, refus, temps ; précision sur échantillon étiqueté.",
+   "role": "Mesure vos techniques et méthodologies : rendement, nouveauté, doublons, fraîcheur, refus, temps ; précision avec vos étiquettes.",
    "entrees": {
     "strategie": "méthodologie",
     "collecteurs": "techniques",
     "sujets_banc": "sujets de test"
    },
    "sorties": {
-    "rapport_banc": "rapport de mesure"
+    "rapport_banc": "rapport de mesure (JSON et Markdown)"
    },
-   "statut": "prevu"
+   "statut": "realise",
+   "appelle": [
+    "generer_requetes_strategie"
+   ]
   },
   {
    "id": "run_collectors",
@@ -3188,6 +3228,13 @@ window.CARTE = {
     "knowledge_map"
    ],
    "type": "donnees",
+   "boucle": false
+  },
+  {
+   "de": "banc_collecte",
+   "vers": "generer_requetes_strategie",
+   "variables": [],
+   "type": "appel",
    "boucle": false
   },
   {

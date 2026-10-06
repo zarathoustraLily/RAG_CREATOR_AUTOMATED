@@ -1,0 +1,5 @@
+{
+  "_note": "Réponse FICTIVE au format de l'API MediaWiki (formatversion=2), pour les tests uniquement.",
+  "batchcomplete": true,
+  "query": {"pages": [{"pageid": 123456, "ns": 0, "title": "Arnaque fictive", "extract": "Texte fictif de l'article."}]}
+}

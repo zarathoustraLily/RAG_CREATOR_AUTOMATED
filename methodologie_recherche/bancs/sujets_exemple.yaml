@@ -1,0 +1,25 @@
+# Sujets de test du banc, par domaine. Un sujet est un texte, ou {langue: texte}
+# quand la formulation change d'une langue à l'autre (les langues absentes sont ignorées).
+# Gardez les mêmes sujets d'un banc à l'autre pour comparer vos modifications.
+
+criminologie:
+  - {fr: "arnaque aux sentiments", en: "romance scam"}
+  - {fr: "escroquerie aux faux placements en cryptomonnaie", en: "cryptocurrency investment fraud"}
+  - {fr: "fraude au faux conseiller bancaire", en: "bank impersonation fraud"}
+
+fiscalite_georgie:
+  - {fr: "impôt sur les bénéfices distribués", en: "profit tax on distributed earnings", ka: "მოგების გადასახადი"}
+  - {fr: "statut de petite entreprise", en: "small business status"}
+  - {fr: "résidence fiscale d'un dirigeant français", en: "tax residence of a French director"}
+
+sante_clinique:
+  - {fr: "état de stress post-traumatique psychothérapie", en: "post-traumatic stress disorder psychotherapy"}
+  - {fr: "phobie spécifique thérapie d'exposition", en: "specific phobia exposure therapy"}
+
+cybersecurite:
+  - {fr: "hameçonnage ciblé", en: "spear phishing"}
+  - {fr: "rançongiciel", en: "ransomware"}
+
+sciences_comportementales:
+  - {fr: "confiance et décision d'achat", en: "trust and purchase decision"}
+  - {fr: "aversion à la perte en négociation", en: "loss aversion negotiation"}

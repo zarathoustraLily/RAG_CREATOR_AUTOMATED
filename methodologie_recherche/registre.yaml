@@ -1,0 +1,40 @@
+# Registre des techniques de recherche.
+# - actif : true / false pour activer ou couper une technique sans supprimer son code ;
+# - module : fichier de collecteurs/ (sans .py), ou chemin Python complet ;
+# - classe : nom de la classe dans ce fichier ;
+# - reglages : propres à chaque technique (voir l'en-tête de son fichier).
+# Ne mettez JAMAIS de clé ou de mot de passe ici : utilisez les variables d'environnement
+# indiquées (RAGC_OPENALEX_CLE, RAGC_CONTACT).
+#
+# Après modification :  python -m pytest methodologie_recherche/tests
+
+version_contrat: "1.0"
+
+techniques:
+  - nom: dossier_local
+    module: dossier_local
+    classe: CollecteurDossierLocal
+    actif: true
+    reglages:
+      dossiers: ["~/RAG_Creator/a_lire"]
+      seuil: 0.5
+
+  - nom: openalex
+    module: api_openalex
+    classe: CollecteurOpenAlex
+    actif: true
+    reglages:
+      par_page: 25          # clé : variable d'environnement RAGC_OPENALEX_CLE
+
+  - nom: wikipedia
+    module: wikipedia
+    classe: CollecteurWikipedia
+    actif: true
+    reglages: {}            # contact : variable d'environnement RAGC_CONTACT
+
+  - nom: liste_lecture
+    module: liste_lecture
+    classe: CollecteurListeLecture
+    actif: true
+    reglages:
+      sites_par_requete: 3

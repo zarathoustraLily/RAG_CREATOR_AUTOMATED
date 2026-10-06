@@ -1,0 +1,41 @@
+# Droit et fiscalité : le texte en vigueur compte plus que la date de publication.
+domaine: juridique_fiscal
+description: "Textes officiels en vigueur, doctrine administrative, jurisprudence, conventions fiscales."
+
+# Les textes de loi anciens restent en vigueur : pas de filtre de date strict,
+# mais l'agent vérifie la version en vigueur et les modifications récentes.
+filtrer_par_date: false
+
+gabarits:
+  fr:
+    - "{sujet} texte en vigueur"
+    - "{sujet} jurisprudence"
+    - "{sujet} BOFiP"
+    - "{sujet} réforme {annee}"
+  en:
+    - "{sujet} law in force"
+    - "{sujet} tax treaty"
+    - "{sujet} OECD"
+
+sources_preferees:
+  - legifrance.gouv.fr
+  - bofip.impots.gouv.fr
+  - impots.gouv.fr
+  - conseil-etat.fr
+  - courdecassation.fr
+  - eur-lex.europa.eu
+  - oecd.org
+
+angles_obligatoires:
+  - "texte officiel en vigueur et date de sa dernière modification"
+  - "doctrine administrative (commentaires officiels)"
+  - "jurisprudence récente"
+  - "conventions internationales applicables"
+
+criteres_tri:
+  garder:
+    - "texte officiel, décision de justice, doctrine administrative publiée"
+  ecarter:
+    - "promesse d'optimisation sans référence aux textes"
+
+cadrage: "Information juridique générale, à faire valider par un professionnel pour une décision."

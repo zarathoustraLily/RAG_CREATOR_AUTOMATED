@@ -1,0 +1,29 @@
+# Pharmacologie : agences du médicament et littérature clinique.
+domaine: pharmaco_medical
+description: "Médicaments et substances : mécanismes, interactions, effets indésirables, autorisations."
+
+langues: [fr, en]
+
+gabarits:
+  fr:
+    - "{sujet} résumé des caractéristiques du produit"
+    - "{sujet} pharmacovigilance ANSM"
+  en:
+    - "{sujet} pharmacokinetics"
+    - "{sujet} adverse events"
+    - "{sujet} drug interactions"
+
+sources_preferees:
+  - ansm.sante.fr
+  - base-donnees-publique.medicaments.gouv.fr
+  - ema.europa.eu
+  - fda.gov
+  - clinicaltrials.gov
+
+angles_obligatoires:
+  - "mécanisme d'action"
+  - "effets indésirables et alertes de pharmacovigilance récentes"
+  - "interactions et contre-indications"
+  - "statut réglementaire en France et en Europe"
+
+cadrage: "Information documentaire ; ne remplace pas un avis médical ou pharmaceutique."

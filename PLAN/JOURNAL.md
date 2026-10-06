@@ -65,3 +65,38 @@
   RTX 4090.
 - **Questions pour l'utilisateur** : voir `001_but.md` §12 (Windows ou Linux, mémoire vive, usage
   conjoint des deux PC, bibliothèque, langues).
+
+## S00 (suite) — Carte du programme et module « Méthodologie et technique de recherche » — 2026-10-06
+
+- **Fait** :
+  - convention des **mini-scripts** : un rôle par fichier, un manifeste `__manifeste__` (rôle,
+    groupe, ordre chronologique, entrées et sorties avec le nom des variables du code) ;
+  - **carte du programme** (`carte_du_programme/`) : `architecture_prevue.yaml` (scripts prévus),
+    `generer_carte.py` (lit les manifestes sans exécuter le code, calcule les flux, contrôle la
+    cohérence), page HTML5 interactive `index.html` (chronologie, flux, variables, parcours
+    guidés, recherche, zoom, thème clair et sombre), 8 tests ;
+  - module **`methodologie_recherche/`** (à l'utilisateur) : contrat des techniques
+    (`Requete`, `Candidat`, `Document`, `Politesse`, `AccesRefuse`, `Ralentir`,
+    `SourceIndisponible`), client HTTP identifié et `robots.txt`, méthodologies YAML avec
+    héritage (commun, juridique_fiscal → fiscalite_georgie, criminologie, sante_clinique,
+    cybersecurite, sciences_comportementales, pharmaco_medical, mycologie), générateur de
+    requêtes, registre, quatre techniques (dossier local, OpenAlex, Wikipédia, liste de lecture)
+    et un gabarit, banc de mesure (exécuter, évaluer avec étiquettes, comparer), 57 tests sans
+    réseau + 2 tests réseau (`--reseau`), exemples de tests personnels, `LISEZMOI.md` ;
+  - carte régénérée : 84 scripts dont 11 réalisés, 0 problème.
+- **Décisions** :
+  - API : la recherche passe par l'API et suit ses règles (agent identifié avec contact, rythme
+    modéré) ; le téléchargement d'une page ou d'un PDF respecte `robots.txt` ;
+  - un refus ou une demande de ralentir arrête la technique pour la source concernée et bascule
+    vers la collecte assistée ; aucune technique ne masque l'automatisation ;
+  - clés et contacts en variables d'environnement (`RAGC_OPENALEX_CLE`, `RAGC_CONTACT`), jamais
+    dans le dépôt.
+- **Constat** : depuis la machine de développement, OpenAlex (sans clé) et Wikipédia (sans
+  contact) répondent « trop de requêtes » ; cause probable des échecs de collecte par API
+  signalés par l'utilisateur (`000` §16).
+- **Mesures** : aucune mesure de performance (banc hors ligne seulement exécuté pour vérifier
+  qu'il fonctionne).
+- **Bancs à lancer par l'utilisateur** : `python -m methodologie_recherche.bancs.banc_collecte
+  executer --domaine fiscalite_georgie --sujets methodologie_recherche/bancs/sujets_exemple.yaml`
+  sur son PC, avec `RAGC_OPENALEX_CLE` et `RAGC_CONTACT` définis.
+

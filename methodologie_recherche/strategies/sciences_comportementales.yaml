@@ -1,0 +1,34 @@
+# Sciences comportementales (vente, décision, persuasion, neurosciences de la décision).
+domaine: sciences_comportementales
+description: "Décision, persuasion, négociation : neurosciences, psychologie, économie comportementale."
+
+langues: [fr, en]
+
+gabarits:
+  fr:
+    - "{sujet} psychologie de la décision"
+    - "{sujet} neurosciences"
+  en:
+    - "{sujet} decision making neuroscience"
+    - "{sujet} behavioral economics experiment"
+    - "{sujet} persuasion field experiment"
+    - {texte: "{sujet} replication", sans_date: true}
+
+sources_preferees:
+  - osf.io
+
+angles_obligatoires:
+  - "mécanismes biologiques et neuronaux (neurosciences de la décision)"
+  - "expériences de terrain et de laboratoire"
+  - "réplications : résultats confirmés ou non"
+  - "taille des effets, pas seulement leur existence"
+
+criteres_tri:
+  garder:
+    - "étude préenregistrée, réplication, méta-analyse"
+  ecarter:
+    - "livre de développement personnel sans source"
+
+remarques: >
+  Beaucoup d'effets célèbres en psychologie n'ont pas été répliqués : chercher
+  systématiquement les réplications avant de retenir un résultat.

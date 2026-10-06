@@ -1,0 +1,50 @@
+# Méthodologie commune : tous les domaines en héritent.
+# Modifiez librement, puis lancez :  python -m pytest methodologie_recherche/tests
+#
+# Gabarits : « {sujet} » est remplacé par le sujet (dans la langue du gabarit).
+# Un gabarit peut s'écrire « {texte: "...", sans_date: true} » pour ignorer le filtre de date
+# (utile pour retrouver les travaux fondateurs, revues et textes de référence).
+
+domaine: commun
+description: "Méthodologie par défaut : publications récentes d'abord, revues et synthèses, sources primaires."
+
+langues: [fr, en]
+
+# Fraîcheur souhaitée : les sources de moins de N mois sont privilégiées.
+fraicheur_mois: 12
+# Vrai : les techniques automatiques ne demandent que les publications de la période.
+filtrer_par_date: true
+
+# Techniques à utiliser, par ordre de préférence (noms du registre.yaml).
+techniques: [dossier_local, openalex, wikipedia, liste_lecture]
+
+gabarits:
+  fr:
+    - "{sujet}"
+    - "{sujet} revue de la littérature"
+  en:
+    - "{sujet}"
+    - "{sujet} systematic review"
+    - {texte: "{sujet} meta-analysis", sans_date: true}
+
+# Sites à privilégier dans la liste de lecture (recherches « site: » que VOUS ouvrez).
+sources_preferees: []
+# Sites à ne jamais retenir.
+sources_exclues: []
+
+# Ce que la recherche doit couvrir pour qu'un sujet soit traité (utilisé par l'agent).
+angles_obligatoires:
+  - "état actuel des connaissances (sources de moins d'un an)"
+  - "synthèses : revues systématiques, méta-analyses, rapports de référence"
+  - "limites, controverses et résultats contradictoires"
+
+# Critères du tri des candidats (titre et extrait), avant tout téléchargement.
+criteres_tri:
+  garder:
+    - "source primaire ou synthèse identifiable (auteur, institution, date)"
+    - "répond directement au sujet"
+  ecarter:
+    - "contenu promotionnel ou sans auteur identifiable"
+    - "page agrégée qui recopie d'autres sources"
+
+cadrage: "Recherche documentaire : comprendre, vérifier, citer ses sources."

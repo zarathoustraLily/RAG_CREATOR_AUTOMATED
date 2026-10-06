@@ -1,0 +1,31 @@
+# Mycologie : nomenclature, toxicologie, intoxications.
+domaine: mycologie
+description: "Espèces de champignons : nomenclature, confusions, toxicité, intoxications."
+
+langues: [fr, en]
+
+# La nomenclature et la toxicologie de référence ne vieillissent pas vite.
+filtrer_par_date: false
+
+gabarits:
+  fr:
+    - "{sujet} intoxication"
+    - "{sujet} confusion espèces"
+  en:
+    - "{sujet} toxicity"
+    - "{sujet} mushroom poisoning case series"
+    - "{sujet} taxonomy"
+
+sources_preferees:
+  - anses.fr
+  - mycobank.org
+  - indexfungorum.org
+  - gbif.org
+
+angles_obligatoires:
+  - "nom scientifique actuel et synonymes"
+  - "toxines, symptômes et délais d'apparition"
+  - "espèces avec lesquelles il est confondu"
+  - "données récentes des centres antipoison"
+
+cadrage: "Information documentaire ; une identification ne se fait jamais à partir d'un texte."

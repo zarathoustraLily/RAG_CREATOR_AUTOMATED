@@ -1,0 +1,37 @@
+# Santé clinique (traumatismes, phobies…) : niveau de preuve d'abord.
+domaine: sante_clinique
+description: "Traitements évalués : essais contrôlés, méta-analyses, recommandations officielles."
+
+langues: [fr, en]
+
+gabarits:
+  fr:
+    - "{sujet} recommandations HAS"
+    - "{sujet} traitement efficacité"
+  en:
+    - "{sujet} randomized controlled trial"
+    - "{sujet} network meta-analysis"
+    - {texte: "{sujet} clinical practice guideline", sans_date: true}
+    - {texte: "{sujet} Cochrane review", sans_date: true}
+
+sources_preferees:
+  - has-sante.fr
+  - nice.org.uk
+  - who.int
+  - cochranelibrary.com
+  - europepmc.org
+
+angles_obligatoires:
+  - "recommandations officielles en vigueur"
+  - "méta-analyses et essais contrôlés récents"
+  - "effets indésirables, contre-indications, abandons"
+  - "populations étudiées et limites de généralisation"
+
+criteres_tri:
+  garder:
+    - "essai contrôlé, méta-analyse, recommandation officielle"
+  ecarter:
+    - "témoignage isolé présenté comme une preuve"
+    - "promesse de guérison"
+
+cadrage: "Information documentaire ; ne remplace pas un avis médical."

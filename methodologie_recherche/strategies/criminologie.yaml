@@ -1,0 +1,37 @@
+# Criminologie des escroqueries : comprendre les procédés pour les détecter et les prévenir.
+domaine: criminologie
+description: "Procédés de manipulation des escrocs, profils des victimes, détection et prévention."
+
+langues: [fr, en]
+
+gabarits:
+  fr:
+    - "{sujet} escroquerie procédés de manipulation"
+    - "{sujet} victimologie"
+    - "{sujet} prévention de la fraude"
+  en:
+    - "{sujet} fraud persuasion techniques"
+    - "{sujet} scam victimization"
+    - "{sujet} social engineering criminology"
+    - "{sujet} fraud prevention intervention evaluation"
+
+sources_preferees:
+  - europol.europa.eu
+  - cybermalveillance.gouv.fr
+  - ftc.gov
+  - ic3.gov
+
+angles_obligatoires:
+  - "étapes du procédé (approche, mise en confiance, exploitation, extraction, disparition)"
+  - "leviers psychologiques mobilisés et preuves empiriques"
+  - "facteurs de vulnérabilité des victimes"
+  - "signaux de détection et interventions de prévention évaluées"
+  - "statistiques officielles récentes"
+
+criteres_tri:
+  garder:
+    - "étude empirique, rapport officiel, analyse de dossiers judiciaires"
+  ecarter:
+    - "mode d'emploi opérationnel d'une escroquerie"
+
+cadrage: "Compréhension, détection et prévention ; pas de mode d'emploi pour escroquer."

@@ -1,0 +1,32 @@
+{
+  "_note": "Réponse FICTIVE au format de l'API OpenAlex, pour les tests uniquement.",
+  "meta": {"count": 2, "page": 1, "per_page": 25},
+  "results": [
+    {
+      "id": "https://openalex.org/W0000000001",
+      "display_name": "Étude fictive des étapes d'une arnaque aux sentiments",
+      "publication_date": "2026-03-15",
+      "doi": "https://doi.org/10.0000/fictif.1",
+      "language": "fr",
+      "type": "article",
+      "cited_by_count": 4,
+      "abstract_inverted_index": {"Cette": [0], "étude": [1], "fictive": [2], "décrit": [3], "les": [4], "étapes": [5]},
+      "open_access": {"is_oa": true, "oa_url": "https://editeur.exemple/article1.pdf"},
+      "best_oa_location": {"pdf_url": "https://editeur.exemple/article1.pdf", "landing_page_url": "https://editeur.exemple/article1"},
+      "primary_location": {"source": {"display_name": "Revue fictive de criminologie"}}
+    },
+    {
+      "id": "https://openalex.org/W0000000002",
+      "display_name": "Second article fictif sans accès libre",
+      "publication_date": "2024-01-10",
+      "doi": null,
+      "language": "fr",
+      "type": "article",
+      "cited_by_count": 0,
+      "abstract_inverted_index": null,
+      "open_access": {"is_oa": false, "oa_url": null},
+      "best_oa_location": null,
+      "primary_location": {"source": null}
+    }
+  ]
+}

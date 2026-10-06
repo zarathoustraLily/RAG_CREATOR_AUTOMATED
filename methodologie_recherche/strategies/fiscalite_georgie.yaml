@@ -1,0 +1,38 @@
+# Fiscalité géorgienne vue depuis la France : droit géorgien ET droit français
+# (domicile fiscal, règles anti-abus) ET convention fiscale entre les deux pays.
+domaine: fiscalite_georgie
+herite: juridique_fiscal
+description: "Imposition d'une société ou d'un résident en Géorgie, et ses conséquences en France."
+
+langues: [fr, en, ka]
+
+gabarits:
+  fr:
+    - "Géorgie fiscalité {sujet}"
+    - "convention fiscale France Géorgie {sujet}"
+    - "domicile fiscal article 4 B CGI {sujet}"
+    - "article 209 B CGI société étrangère {sujet}"
+  en:
+    - "Georgia Tax Code {sujet}"
+    - "Georgia Revenue Service {sujet}"
+    - "Georgia corporate profit tax distributed profits {sujet}"
+    - "Georgia International Company status {sujet}"
+    - "Georgia Virtual Zone Person {sujet}"
+  ka:
+    - "საქართველოს საგადასახადო კოდექსი {sujet}"
+
+sources_preferees:
+  - matsne.gov.ge
+  - rs.ge
+  - mof.ge
+
+angles_obligatoires:
+  - "droit géorgien : Code des impôts en vigueur et statuts particuliers (société internationale, zone virtuelle, petite entreprise)"
+  - "droit français : domicile fiscal (art. 4 B CGI), sociétés étrangères contrôlées (art. 209 B et 123 bis CGI), paiements vers des États à fiscalité privilégiée (art. 238 A CGI)"
+  - "convention fiscale France–Géorgie : résidence, établissement stable, dividendes"
+  - "substance économique réelle et risques de requalification"
+  - "réformes récentes en Géorgie et en France"
+
+remarques: >
+  Les textes géorgiens officiels sont publiés sur matsne.gov.ge (Journal législatif),
+  souvent avec une version anglaise ; la version géorgienne fait foi.
